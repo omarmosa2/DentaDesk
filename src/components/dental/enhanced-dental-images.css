@@ -1,0 +1,357 @@
+/* تحسينات CSS لتبويبة الصور في النظام الجديد للعلاجات المتعددة */
+
+/* تحسين مظهر أزرار اختيار نوع الصورة */
+.image-type-button {
+  transition: all 0.2s ease-in-out;
+  border: 2px dashed #e2e8f0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.image-type-button:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.image-type-button:active {
+  transform: translateY(0);
+}
+
+/* تحسين مظهر معاينة الصور المحددة */
+.selected-image-preview {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.selected-image-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* تحسين مظهر بطاقات أنواع الصور */
+.image-type-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.image-type-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* تحسين مظهر أيقونات أنواع الصور */
+.image-type-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.image-type-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* تحسين مظهر شارة عدد الصور */
+.image-count-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* تحسين مظهر بطاقات الصور المحفوظة */
+.saved-image-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.saved-image-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* تحسين مظهر أزرار الإجراءات على الصور */
+.image-action-button {
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.image-action-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* تحسينات للوضع المظلم */
+@media (prefers-color-scheme: dark) {
+  .image-type-button {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+  }
+
+  .image-type-button:hover {
+    border-color: #60a5fa;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  }
+
+  .image-type-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+  }
+
+  .image-type-card:hover {
+    border-color: #4b5563;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+  }
+
+  .image-type-label {
+    color: #f3f4f6;
+  }
+
+  .saved-image-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .saved-image-card:hover {
+    background: #1e293b;
+    border-color: #3b82f6;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .image-count-badge {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    color: #dbeafe;
+  }
+}
+
+/* تحسينات إضافية للوضع المظلم باستخدام class selector */
+.dark .image-type-card {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
+  border-color: #374151 !important;
+}
+
+.dark .image-type-card:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dark .saved-image-card {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.dark .saved-image-card:hover {
+  background: #1e293b !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .image-count-badge {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+  color: #dbeafe !important;
+}
+
+.dark .image-type-label {
+  color: #f3f4f6 !important;
+}
+
+.dark .image-action-button {
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .image-type-button {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .selected-image-preview {
+    border-radius: 8px;
+  }
+
+  .saved-image-card {
+    border-radius: 8px;
+  }
+
+  .image-action-button {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+/* تحسينات للطباعة */
+@media print {
+  .image-type-button,
+  .image-action-button {
+    display: none;
+  }
+
+  .saved-image-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* تحسينات الأنيميشن */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selected-image-preview,
+.saved-image-card {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* تحسينات إمكانية الوصول */
+.image-type-button:focus,
+.image-action-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* تحسين مظهر شريط التمرير */
+.image-type-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.image-type-card::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.image-type-card::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.image-type-card::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* تحسين مظهر زر المعاينة (Preview Button) */
+.image-preview-button {
+  position: relative !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: blur(6px) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+  font-size: 14px !important;
+}
+
+.image-preview-button:hover {
+  background: rgba(0, 0, 0, 0.95);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.image-preview-button:active {
+  transform: scale(1.05);
+}
+
+/* تحسينات زر المعاينة للوضع المظلم */
+@media (prefers-color-scheme: dark) {
+  .image-preview-button {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
+  }
+
+  .image-preview-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* تحسينات زر المعاينة للوضع المظلم باستخدام class selector */
+.dark .image-preview-button {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .image-preview-button:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* تحسينات زر المعاينة للوضع الفاتح */
+@media (prefers-color-scheme: light) {
+  .image-preview-button {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .image-preview-button:hover {
+    background: rgba(0, 0, 0, 0.95);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* تحسين تخطيط الأزرار فوق الصور - إجبار الترتيب الأفقي */
+.image-action-buttons-container {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  z-index: 30 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* تأكيد أن الأزرار تظهر جنب بعض */
+.image-action-buttons-container > * {
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+}
+
+/* إزالة أي تنسيق قد يؤثر على الترتيب */
+.image-action-buttons-container .image-action-button,
+.image-action-buttons-container .image-preview-button {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+}

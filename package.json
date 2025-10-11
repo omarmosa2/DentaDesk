@@ -1,0 +1,170 @@
+{
+  "name": "DentaDesk",
+  "version": "2.1.0",
+  "description": "Dental Clinic DentaDesk",
+  "author": "DentaDesk Team",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"cross-env NODE_ENV=development electron .\"",
+    "electron": "electron .",
+    "electron:build": "npm run build && electron .",
+    "rebuild": "npx @electron/rebuild -f -w",
+    "postinstall": "electron-builder install-app-deps",
+    "test": "echo \"No tests specified\"",
+    "install-deps": "npm install vite @vitejs/plugin-react react react-dom typescript",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-checkbox": "^1.3.2",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-toast": "^1.2.14",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@whiskeysockets/baileys": "^7.0.0-rc.3",
+    "archiver": "^7.0.1",
+    "better-sqlite3": "^12.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "concurrently": "^9.1.2",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.18",
+    "electron-store": "^10.1.0",
+    "exceljs": "^4.4.0",
+    "extract-zip": "^2.0.1",
+    "fuse.js": "^7.1.0",
+    "glob": "^11.0.3",
+    "html2canvas": "^1.4.1",
+    "jsbarcode": "^3.12.1",
+    "jspdf": "^3.0.1",
+    "lowdb": "^7.0.1",
+    "lucide-react": "^0.294.0",
+    "node-cron": "^4.2.1",
+    "node-machine-id": "^1.1.12",
+    "pdfkit": "^0.17.1",
+    "pdfmake": "^0.2.20",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "react": "^18.2.0",
+    "react-big-calendar": "^1.19.3",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.58.0",
+    "react-router-dom": "^6.20.1",
+    "react-window": "^2.1.0",
+    "react-window-infinite-loader": "^1.0.10",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^9.0.1",
+    "zod": "^3.25.67",
+    "zustand": "^5.0.5"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@types/jsbarcode": "^3.11.4",
+    "@types/pdfmake": "^0.2.11",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.1",
+    "autoprefixer": "^10.4.16",
+    "cross-env": "^7.0.3",
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12",
+    "postcss": "^8.4.31",
+    "rimraf": "^4.4.1",
+    "tailwindcss": "^3.3.5",
+    "terser": "^5.43.1",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
+  },
+  "build": {
+    "appId": "com.ORalSoft",
+    "productName": "DentaDesk",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "src/database/**/*",
+      "src/services/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      },
+      {
+        "from": "src/database",
+        "to": "database"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "forceCodeSigning": false
+      
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "perMachine": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "DentaDesk",
+      "language": "1033",
+      "displayLanguageSelector": false,
+      "multiLanguageInstaller": false,
+      "license": "installer/license-en.txt",
+      "artifactName": "DentaDesk-v${version}-Setup.${ext}",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "menuCategory": "Healthcare",
+      "warningsAsErrors": false,
+      "unicode": true,
+      "guid": "DentaDesk-v1.0"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.healthcare-fitness"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "category": "Office"
+    },
+    "publish": null
+  }
+}

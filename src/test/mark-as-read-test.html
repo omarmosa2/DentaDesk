@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار زر تحديد كمقروء</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .alert-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .alert-unread {
+            border-left: 4px solid #007bff;
+            background: #e3f2fd;
+        }
+        .alert-read {
+            border-left: 4px solid #28a745;
+            background: #e8f5e9;
+            opacity: 0.7;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 اختبار زر تحديد كمقروء</h1>
+        
+        <div class="test-section">
+            <h3>📋 حالة النظام</h3>
+            <p id="system-status">جاري التحقق من النظام...</p>
+            <button onclick="checkSystem()">تحديث حالة النظام</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 إجراءات الاختبار</h3>
+            <button onclick="createTestAlert()">إنشاء تنبيه اختبار</button>
+            <button onclick="loadAlerts()">تحميل التنبيهات</button>
+            <button onclick="clearTestAlerts()">حذف تنبيهات الاختبار</button>
+            <button onclick="clearLog()">مسح السجل</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📢 التنبيهات الحالية</h3>
+            <div id="alerts-container">
+                <p>لا توجد تنبيهات محملة</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 سجل الأحداث</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentAlerts = [];
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function checkSystem() {
+            log('🔍 فحص حالة النظام...');
+            
+            try {
+                // التحقق من وجود window.electronAPI
+                if (!window.electronAPI) {
+                    log('❌ window.electronAPI غير متوفر', 'error');
+                    document.getElementById('system-status').innerHTML = 
+                        '<span class="error">❌ النظام غير متصل - window.electronAPI غير متوفر</span>';
+                    return;
+                }
+
+                // التحقق من وجود smartAlerts API
+                if (!window.electronAPI.smartAlerts) {
+                    log('❌ smartAlerts API غير متوفر', 'error');
+                    document.getElementById('system-status').innerHTML = 
+                        '<span class="error">❌ smartAlerts API غير متوفر</span>';
+                    return;
+                }
+
+                // اختبار الاتصال بقاعدة البيانات
+                const alerts = await window.electronAPI.smartAlerts.getAll();
+                log(`✅ تم الاتصال بقاعدة البيانات - عدد التنبيهات: ${alerts.length}`, 'success');
+                
+                document.getElementById('system-status').innerHTML = 
+                    `<span class="success">✅ النظام متصل - عدد التنبيهات: ${alerts.length}</span>`;
+                    
+            } catch (error) {
+                log(`❌ خطأ في فحص النظام: ${error.message}`, 'error');
+                document.getElementById('system-status').innerHTML = 
+                    `<span class="error">❌ خطأ في الاتصال: ${error.message}</span>`;
+            }
+        }
+
+        async function createTestAlert() {
+            log('🔧 إنشاء تنبيه اختبار...');
+            
+            try {
+                const testAlert = {
+                    id: `test_mark_read_${Date.now()}`,
+                    type: 'appointment',
+                    priority: 'medium',
+                    title: 'تنبيه اختبار - تحديد كمقروء',
+                    description: 'هذا تنبيه اختبار لفحص وظيفة تحديد كمقروء',
+                    patientId: null,
+                    patientName: null,
+                    relatedData: { test: true },
+                    actionRequired: false,
+                    dueDate: null,
+                    isRead: false,
+                    isDismissed: false,
+                    snoozeUntil: null,
+                    createdAt: new Date().toISOString()
+                };
+
+                await window.electronAPI.smartAlerts.create(testAlert);
+                log(`✅ تم إنشاء تنبيه اختبار: ${testAlert.id}`, 'success');
+                
+                // تحميل التنبيهات المحدثة
+                await loadAlerts();
+                
+            } catch (error) {
+                log(`❌ خطأ في إنشاء تنبيه الاختبار: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadAlerts() {
+            log('📥 تحميل التنبيهات...');
+            
+            try {
+                const alerts = await window.electronAPI.smartAlerts.getAll();
+                currentAlerts = alerts;
+                
+                log(`📊 تم تحميل ${alerts.length} تنبيه`, 'success');
+                
+                renderAlerts();
+                
+            } catch (error) {
+                log(`❌ خطأ في تحميل التنبيهات: ${error.message}`, 'error');
+            }
+        }
+
+        function renderAlerts() {
+            const container = document.getElementById('alerts-container');
+            
+            if (currentAlerts.length === 0) {
+                container.innerHTML = '<p>لا توجد تنبيهات</p>';
+                return;
+            }
+
+            let html = '';
+            currentAlerts.forEach(alert => {
+                const isRead = alert.isRead || alert.is_read;
+                const alertClass = isRead ? 'alert-read' : 'alert-unread';
+                const readStatus = isRead ? '✅ مقروء' : '📢 غير مقروء';
+                
+                html += `
+                    <div class="alert-item ${alertClass}">
+                        <div><strong>${alert.title}</strong></div>
+                        <div>${alert.description}</div>
+                        <div>الحالة: ${readStatus}</div>
+                        <div>المعرف: ${alert.id}</div>
+                        ${!isRead ? `<button onclick="markAsRead('${alert.id}')">تحديد كمقروء</button>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        async function markAsRead(alertId) {
+            log(`🔄 تحديد التنبيه كمقروء: ${alertId}`);
+            
+            try {
+                // العثور على التنبيه الحالي
+                const alert = currentAlerts.find(a => a.id === alertId);
+                if (!alert) {
+                    log(`❌ لم يتم العثور على التنبيه: ${alertId}`, 'error');
+                    return;
+                }
+                
+                log(`📋 حالة التنبيه قبل التحديث: isRead=${alert.isRead || alert.is_read}`);
+                
+                // تحديث التنبيه في قاعدة البيانات
+                const result = await window.electronAPI.smartAlerts.update(alertId, { isRead: true });
+                log(`💾 نتيجة تحديث قاعدة البيانات: ${result}`, 'success');
+                
+                // التحقق من التحديث
+                const updatedAlert = await window.electronAPI.smartAlerts.getById(alertId);
+                if (updatedAlert) {
+                    log(`📋 حالة التنبيه بعد التحديث: isRead=${updatedAlert.isRead || updatedAlert.is_read}`, 'success');
+                } else {
+                    log(`❌ لم يتم العثور على التنبيه المحدث`, 'error');
+                }
+                
+                // إعادة تحميل التنبيهات
+                await loadAlerts();
+                
+            } catch (error) {
+                log(`❌ خطأ في تحديد التنبيه كمقروء: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearTestAlerts() {
+            log('🗑️ حذف تنبيهات الاختبار...');
+            
+            try {
+                const testAlerts = currentAlerts.filter(alert => 
+                    alert.id.includes('test_mark_read') || 
+                    alert.title.includes('تنبيه اختبار')
+                );
+                
+                for (const alert of testAlerts) {
+                    await window.electronAPI.smartAlerts.delete(alert.id);
+                    log(`🗑️ تم حذف تنبيه الاختبار: ${alert.id}`);
+                }
+                
+                log(`✅ تم حذف ${testAlerts.length} تنبيه اختبار`, 'success');
+                
+                // إعادة تحميل التنبيهات
+                await loadAlerts();
+                
+            } catch (error) {
+                log(`❌ خطأ في حذف تنبيهات الاختبار: ${error.message}`, 'error');
+            }
+        }
+
+        // تشغيل فحص النظام عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            log('🚀 بدء اختبار زر تحديد كمقروء');
+            checkSystem();
+        });
+    </script>
+</body>
+</html>

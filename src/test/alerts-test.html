@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار نظام التنبيهات الذكية</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .alert {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .alert.high {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .alert.medium {
+            background-color: #fffbeb;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .alert.low {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .alert-description {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .alert-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            background-color: rgba(0,0,0,0.1);
+            margin-left: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .refresh-btn {
+            background: #10b981;
+        }
+        .refresh-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 نظام التنبيهات الذكية - اختبار</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalAlerts">0</div>
+                <div class="stat-label">إجمالي التنبيهات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="unreadAlerts">0</div>
+                <div class="stat-label">غير مقروءة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highPriorityAlerts">0</div>
+                <div class="stat-label">عالية الأولوية</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="actionRequiredAlerts">0</div>
+                <div class="stat-label">تحتاج إجراء</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button onclick="loadAlerts()" class="refresh-btn">🔄 تحديث التنبيهات</button>
+            <button onclick="markAllAsRead()">✅ تعليم الكل كمقروء</button>
+            <button onclick="clearDismissed()">🗑️ حذف المخفية</button>
+        </div>
+
+        <div id="alertsContainer">
+            <p>جاري تحميل التنبيهات...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentAlerts = [];
+
+        // تحميل التنبيهات
+        async function loadAlerts() {
+            try {
+                console.log('🔄 Loading alerts...');
+                
+                // محاكاة تحميل التنبيهات (في التطبيق الحقيقي سيتم استدعاء SmartAlertsService)
+                const mockAlerts = generateMockAlerts();
+                currentAlerts = mockAlerts;
+                
+                updateStats();
+                renderAlerts();
+                
+                console.log('✅ Alerts loaded:', currentAlerts.length);
+            } catch (error) {
+                console.error('❌ Error loading alerts:', error);
+                document.getElementById('alertsContainer').innerHTML = 
+                    '<div class="alert high"><div class="alert-title">خطأ في تحميل التنبيهات</div><div class="alert-description">' + error.message + '</div></div>';
+            }
+        }
+
+        // توليد تنبيهات تجريبية
+        function generateMockAlerts() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            return [
+                {
+                    id: 'test_appointment_1',
+                    type: 'appointment',
+                    priority: 'high',
+                    title: 'موعد اليوم - أحمد محمد',
+                    description: 'موعد مجدول اليوم في 2:00 PM - فحص دوري',
+                    patientName: 'أحمد محمد',
+                    actionRequired: true,
+                    isRead: false,
+                    isDismissed: false,
+                    createdAt: now.toISOString()
+                },
+                {
+                    id: 'test_payment_1',
+                    type: 'payment',
+                    priority: 'medium',
+                    title: 'دفعة آجلة - فاطمة علي',
+                    description: 'دفعة آجلة منذ 5 أيام - المبلغ: 150$',
+                    patientName: 'فاطمة علي',
+                    actionRequired: true,
+                    isRead: false,
+                    isDismissed: false,
+                    createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'test_inventory_1',
+                    type: 'inventory',
+                    priority: 'high',
+                    title: 'مخزون منخفض - قفازات طبية',
+                    description: 'الكمية المتبقية: 2 - الحد الأدنى: 10',
+                    actionRequired: true,
+                    isRead: false,
+                    isDismissed: false,
+                    createdAt: now.toISOString()
+                },
+                {
+                    id: 'test_treatment_1',
+                    type: 'treatment',
+                    priority: 'medium',
+                    title: 'علاج آجل - محمد حسن',
+                    description: 'علاج تقويم للسن 12 آجل منذ 20 يوم',
+                    patientName: 'محمد حسن',
+                    actionRequired: true,
+                    isRead: true,
+                    isDismissed: false,
+                    createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'test_prescription_1',
+                    type: 'prescription',
+                    priority: 'low',
+                    title: 'وصفة قديمة - سارة أحمد',
+                    description: 'وصفة صادرة منذ 35 يوم - قد تحتاج تجديد',
+                    patientName: 'سارة أحمد',
+                    actionRequired: false,
+                    isRead: false,
+                    isDismissed: false,
+                    createdAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+        }
+
+        // تحديث الإحصائيات
+        function updateStats() {
+            const total = currentAlerts.length;
+            const unread = currentAlerts.filter(a => !a.isRead && !a.isDismissed).length;
+            const highPriority = currentAlerts.filter(a => a.priority === 'high' && !a.isDismissed).length;
+            const actionRequired = currentAlerts.filter(a => a.actionRequired && !a.isDismissed).length;
+
+            document.getElementById('totalAlerts').textContent = total;
+            document.getElementById('unreadAlerts').textContent = unread;
+            document.getElementById('highPriorityAlerts').textContent = highPriority;
+            document.getElementById('actionRequiredAlerts').textContent = actionRequired;
+        }
+
+        // عرض التنبيهات
+        function renderAlerts() {
+            const container = document.getElementById('alertsContainer');
+            const visibleAlerts = currentAlerts.filter(a => !a.isDismissed);
+
+            if (visibleAlerts.length === 0) {
+                container.innerHTML = '<div class="alert low"><div class="alert-title">✅ لا توجد تنبيهات جديدة</div><div class="alert-description">جميع التنبيهات تم التعامل معها</div></div>';
+                return;
+            }
+
+            const alertsHtml = visibleAlerts.map(alert => {
+                const typeLabels = {
+                    appointment: '📅 موعد',
+                    payment: '💰 دفعة',
+                    treatment: '🦷 علاج',
+                    prescription: '💊 وصفة',
+                    inventory: '📦 مخزون',
+                    follow_up: '👤 متابعة'
+                };
+
+                return `
+                    <div class="alert ${alert.priority}" onclick="handleAlertClick('${alert.id}')">
+                        <div class="alert-title">
+                            ${alert.title}
+                            <span class="alert-type">${typeLabels[alert.type] || alert.type}</span>
+                            ${!alert.isRead ? '<span style="color: #ef4444;">●</span>' : ''}
+                        </div>
+                        <div class="alert-description">${alert.description}</div>
+                        ${alert.patientName ? `<div style="margin-top: 5px; font-size: 12px; color: #6b7280;">👤 ${alert.patientName}</div>` : ''}
+                        <div style="margin-top: 10px; font-size: 11px; color: #9ca3af;">
+                            ${new Date(alert.createdAt).toLocaleString('en-US')}
+                            ${alert.actionRequired ? ' • يحتاج إجراء' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = alertsHtml;
+        }
+
+        // التعامل مع النقر على التنبيه
+        function handleAlertClick(alertId) {
+            const alert = currentAlerts.find(a => a.id === alertId);
+            if (alert && !alert.isRead) {
+                alert.isRead = true;
+                updateStats();
+                renderAlerts();
+                console.log('✅ Alert marked as read:', alertId);
+            }
+        }
+
+        // تعليم جميع التنبيهات كمقروءة
+        function markAllAsRead() {
+            currentAlerts.forEach(alert => {
+                if (!alert.isDismissed) {
+                    alert.isRead = true;
+                }
+            });
+            updateStats();
+            renderAlerts();
+            console.log('✅ All alerts marked as read');
+        }
+
+        // حذف التنبيهات المخفية
+        function clearDismissed() {
+            const beforeCount = currentAlerts.length;
+            currentAlerts = currentAlerts.filter(a => !a.isDismissed);
+            const afterCount = currentAlerts.length;
+            updateStats();
+            renderAlerts();
+            console.log(`🗑️ Cleared ${beforeCount - afterCount} dismissed alerts`);
+        }
+
+        // تحميل التنبيهات عند بدء التشغيل
+        document.addEventListener('DOMContentLoaded', loadAlerts);
+    </script>
+</body>
+</html>

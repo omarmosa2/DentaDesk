@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "title": "Used License Keys Tracker",
+    "description": "Tracks which license keys have been activated and on which devices",
+    "lastUpdated": "2025-06-23T11:48:43.802Z",
+    "totalUsedKeys": 2
+  },
+  "usedLicenses": {
+    "20e9cacba8c1046aff0d5f130cba85dff79de28726c57fbb634914097de10091": {
+      "hwid": "d164d1d5e8f9a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7",
+      "activatedAt": "2025-06-23T11:48:43.764Z",
+      "lastValidated": "2025-06-23T11:48:43.764Z",
+      "activationCount": 1,
+      "testDevice": "device1",
+      "testTime": "2025-06-23T11:48:43.764Z"
+    },
+    "2d8b5339e147a9483298c98b820c35b1a92ac9a2c5e058a147f950b5f804eaf8": {
+      "hwid": "f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8",
+      "activatedAt": "2025-06-23T11:48:43.802Z",
+      "lastValidated": "2025-06-23T11:48:43.802Z",
+      "activationCount": 1,
+      "testDevice": "device3",
+      "testTime": "2025-06-23T11:48:43.801Z"
+    }
+  }
+}

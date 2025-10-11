@@ -1,0 +1,4 @@
+node_modules/
+dist/
+dental_images/
+dist-electron/

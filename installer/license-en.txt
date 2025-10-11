@@ -1,0 +1,34 @@
+SOFTWARE LICENSE AGREEMENT
+Dental Clinic Management DentaDeskCode
+
+Copyright (c) 2024 DentaDeskCode Team. All rights reserved.
+
+IMPORTANT - READ CAREFULLY: This Software License Agreement ("Agreement") is a legal agreement between you (either an individual or a single entity) and DentaDeskCode Team for the software product identified above, which includes computer software and may include associated media, printed materials, and "online" or electronic documentation ("Software").
+
+BY INSTALLING, COPYING, OR OTHERWISE USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS OF THIS AGREEMENT, DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. GRANT OF LICENSE
+DentaDeskCode Team grants you the following rights provided that you comply with all terms and conditions of this Agreement:
+- You may install and use one copy of the Software on a single computer.
+- You may make one copy of the Software for backup purposes only.
+
+2. RESTRICTIONS
+You may not:
+- Reverse engineer, decompile, or disassemble the Software
+- Rent, lease, or lend the Software
+- Use the Software for any illegal purpose
+- Remove or alter any copyright notices
+
+3. DISCLAIMER OF WARRANTIES
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. DentaDeskCODE TEAM DISCLAIMS ALL WARRANTIES, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+4. LIMITATION OF LIABILITY
+IN NO EVENT SHALL DentaDeskCODE TEAM BE LIABLE FOR ANY DAMAGES WHATSOEVER ARISING OUT OF THE USE OF OR INABILITY TO USE THE SOFTWARE.
+
+5. TERMINATION
+This Agreement is effective until terminated. You may terminate it at any time by destroying the Software. This Agreement will also terminate if you fail to comply with any term or condition of this Agreement.
+
+By clicking "I Agree" or by installing the Software, you acknowledge that you have read this Agreement, understand it, and agree to be bound by its terms and conditions.
+
+DentaDeskCode Team
+Contact: dev@DentaDeskcode.com

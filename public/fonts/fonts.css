@@ -1,0 +1,137 @@
+/* Arabic Fonts for PDF Reports */
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* CSS Variables for consistent font usage */
+:root {
+  --font-arabic: 'Tajawal', 'Cairo', 'Amiri', Arial, sans-serif;
+  --font-arabic-display: 'Tajawal', 'Cairo', Arial, sans-serif;
+  --font-arabic-body: 'Tajawal', Arial, sans-serif;
+}
+
+/* Utility classes for Arabic text */
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+.font-arabic-display {
+  font-family: var(--font-arabic-display);
+}
+
+.font-arabic-body {
+  font-family: var(--font-arabic-body);
+}
+
+/* RTL text direction utilities */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* PDF-specific styles */
+.pdf-content {
+  font-family: var(--font-arabic);
+  direction: rtl;
+  line-height: 1.6;
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.pdf-header {
+  font-family: var(--font-arabic-display);
+  font-weight: 700;
+}
+
+.pdf-body {
+  font-family: var(--font-arabic-body);
+  font-weight: 400;
+}
+
+.pdf-table {
+  font-family: var(--font-arabic);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Print optimizations */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .pdf-content {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .pdf-header {
+    font-size: 18pt;
+    font-weight: 700;
+  }
+  
+  .pdf-table {
+    font-size: 10pt;
+  }
+}

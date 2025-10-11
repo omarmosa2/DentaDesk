@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/dental-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <title>Dental Clinic Management DentaDeskCode</title>
+
+    <!-- ✅ معالج الأخطاء الشامل -->
+    <script>
+      // معالج الأخطاء العام
+      window.addEventListener('error', function(event) {
+        console.error('❌ Global Error:', event.error);
+        console.error('  Message:', event.message);
+        console.error('  Source:', event.filename);
+        console.error('  Line:', event.lineno);
+        console.error('  Column:', event.colno);
+      });
+
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('❌ Unhandled Promise Rejection:', event.reason);
+      });
+
+      // تسجيل حالة التحميل
+      console.log('🚀 HTML loaded, initializing...');
+    </script>
+
+    <!-- Immediate dark mode initialization to prevent flash -->
+    <script>
+      (function() {
+        try {
+          console.log('🎨 Initializing theme...');
+          const storedTheme = localStorage.getItem('dental-clinic-theme');
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+          let shouldBeDark = false;
+          if (storedTheme) {
+            shouldBeDark = storedTheme === 'dark';
+          } else {
+            shouldBeDark = systemPrefersDark;
+            localStorage.setItem('dental-clinic-theme', shouldBeDark ? 'dark' : 'light');
+          }
+
+          // Apply both dark class and data-theme attribute for consistency
+          if (shouldBeDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+
+          console.log('✅ Theme initialized:', shouldBeDark ? 'dark' : 'light');
+        } catch (e) {
+          // Fallback to light mode if there's any error
+          console.warn('⚠️ Failed to initialize theme:', e);
+        }
+      })();
+    </script>
+
+    <!-- ✅ فحص البيئة -->
+    <script>
+      console.log('🔍 Environment Check:');
+      console.log('  - User Agent:', navigator.userAgent);
+      console.log('  - Platform:', navigator.platform);
+      console.log('  - Language:', navigator.language);
+      console.log('  - Online:', navigator.onLine);
+      console.log('  - Cookies Enabled:', navigator.cookieEnabled);
+      console.log('  - Local Storage Available:', typeof(Storage) !== "undefined");
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

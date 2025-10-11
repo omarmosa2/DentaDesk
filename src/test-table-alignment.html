@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار محاذاة الجداول</title>
+    <style>
+        body {
+            font-family: 'Tajawal', Arial, sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        
+        .table-center-all th,
+        .table-center-all td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+        
+        .table-center-all th.cursor-pointer {
+            text-align: center !important;
+        }
+        
+        .table-center-all th.cursor-pointer > div {
+            justify-content: center !important;
+            text-align: center !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        .table-center-all .flex {
+            justify-content: center !important;
+            align-items: center !important;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+        
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .flex {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .arabic-enhanced {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <h1>اختبار محاذاة الجداول</h1>
+    
+    <h2>الجدول مع فئة table-center-all</h2>
+    <table class="table-center-all">
+        <thead>
+            <tr>
+                <th class="text-center">
+                    <span class="arabic-enhanced font-medium">#</span>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">رقم الإيصال</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">المريض</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">المبلغ</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">طريقة الدفع</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">الحالة</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="cursor-pointer hover:bg-muted/50 text-center">
+                    <div class="flex items-center justify-center space-x-1 space-x-reverse">
+                        <span class="arabic-enhanced font-medium">تاريخ الدفع</span>
+                        <span>↕</span>
+                    </div>
+                </th>
+                <th class="text-center">
+                    <span class="arabic-enhanced font-medium">الإجراءات</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="font-medium text-center">1</td>
+                <td class="font-medium text-center">RCP-250622-0426</td>
+                <td class="font-medium text-center">أحمد محمد علي</td>
+                <td class="text-center">$10.00</td>
+                <td class="text-center">نقداً</td>
+                <td class="text-center">مكتمل</td>
+                <td class="text-center">22/06/2025</td>
+                <td class="text-center">
+                    <div class="flex items-center gap-1 justify-center">
+                        <button>تحرير</button>
+                        <button>حذف</button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2 style="margin-top: 40px;">النتيجة المتوقعة</h2>
+    <p>يجب أن تكون جميع عناوين الأعمدة والبيانات محاذاة في الوسط بشكل مثالي.</p>
+    
+    <div style="margin-top: 20px; padding: 15px; background-color: #dcfce7; border-radius: 8px;">
+        <h3 style="color: #166534; margin: 0 0 10px 0;">✅ الإصلاحات المطبقة:</h3>
+        <ul style="color: #166534; margin: 0;">
+            <li>إضافة !important لضمان تطبيق المحاذاة المركزية</li>
+            <li>إصلاح مشكلة SortableHeader مع flex containers</li>
+            <li>تحسين المحاذاة الرأسية والأفقية</li>
+            <li>دعم أفضل للنصوص العربية (RTL)</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+/* تحسينات CSS لتبويبة الصور في علاج الأسنان */
+
+/* تحسين مظهر أزرار اختيار نوع الصورة */
+.image-type-button {
+  transition: all 0.3s ease-in-out;
+  border: 2px dashed #e2e8f0 !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  color: #475569 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-type-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.image-type-button:hover {
+  border-color: #3b82f6 !important;
+  border-style: solid !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
+  color: #1e40af !important;
+}
+
+.image-type-button:hover::before {
+  opacity: 1;
+}
+
+.image-type-button:active {
+  transform: translateY(-1px);
+}
+
+/* تحسين مظهر معاينة الصور المحددة */
+.selected-image-preview {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.selected-image-preview:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.selected-image-preview img {
+  transition: all 0.3s ease;
+}
+
+.selected-image-preview:hover img {
+  filter: brightness(1.1);
+}
+
+/* تحسين مظهر الصور المحفوظة */
+.saved-image-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.saved-image-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  border-color: #3b82f6;
+}
+
+.saved-image-card img {
+  transition: all 0.3s ease;
+}
+
+.saved-image-card:hover img {
+  transform: scale(1.05);
+}
+
+/* تحسين أزرار الإجراءات */
+.image-action-button {
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.image-action-button:hover {
+  transform: scale(1.1);
+}
+
+/* تحسين مظهر البطاقات */
+.image-type-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.image-type-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+}
+
+/* تحسين مظهر الشارات */
+.image-count-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+/* تحسين مظهر الحالة الفارغة */
+.empty-state {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 3rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.empty-state:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* تحسين مظهر أيقونات أنواع الصور */
+.image-type-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* تحسين مظهر النصوص */
+.image-type-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+/* تحسين مظهر الشبكة */
+.images-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .images-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* تحسين مظهر معلومات الصورة */
+.image-info {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* تحسين مظهر التحميل */
+.upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.upload-area:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* تحسين مظهر الوضع المظلم */
+.dark .image-type-button {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .image-type-button::before {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+}
+
+.dark .image-type-button:hover {
+  border-color: #3b82f6 !important;
+  border-style: solid !important;
+  color: #dbeafe !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.dark .saved-image-card {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark .saved-image-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dark .image-type-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-color: #475569;
+}
+
+.dark .image-type-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+}
+
+.dark .empty-state {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-color: #475569;
+}
+
+.dark .empty-state:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+}
+
+.dark .upload-area {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-color: #475569;
+}
+
+.dark .upload-area:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+}

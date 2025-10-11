@@ -1,0 +1,103 @@
+{
+  "appId": "com.DentaDeskcode.dentalclinic",
+  "productName": "DentaDesk",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "src/database/**/*",
+    "src/services/**/*",
+    "!node_modules/",
+    "!src/",
+    "!docs/",
+    "!tests/",
+    "!scripts/",
+    "!public/",
+    "!assets/",
+    "!**/*.log",
+    "!**/.DS_Store",
+    "!**/*.tmp",
+    "!**/*.swp",
+    "!**/*.bak"
+  ],
+  "extraResources": [
+    {
+      "from": "src/database",
+      "to": "database",
+      "filter": [
+        "**/*.sql",
+        "**/*.json"
+      ]
+    },
+    {
+      "from": "node_modules/puppeteer-core/.local-chromium",
+      "to": "chrome-win",
+      "filter": ["**/*"]
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.ico",
+    "requestedExecutionLevel": "asInvoker",
+    "forceCodeSigning": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "perMachine": true,
+    "installerIcon": "assets/icon.ico",
+    "uninstallerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico",
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "DentaDesk",
+    "language": "1033",
+    "displayLanguageSelector": false,
+    "multiLanguageInstaller": false,
+    "license": "installer/license-en.txt",
+    "artifactName": "DentaDesk-v${version}-Setup.${ext}",
+    "deleteAppDataOnUninstall": false,
+    "runAfterFinish": true,
+    "menuCategory": "Healthcare",
+    "warningsAsErrors": false,
+    "unicode": true,
+    "guid": "DentaDesk-v1.0"
+  },
+  "mac": {
+    "target": "dmg",
+    "icon": "assets/icon.icns",
+    "category": "public.app-category.healthcare-fitness"
+  },
+  "linux": {
+    "target": "AppImage",
+    "icon": "assets/icon.png",
+    "category": "Office"
+  },
+  "publish": null,
+  "compression": "maximum",
+  "asar": true,
+  "asarUnpack": [
+    "node_modules/better-sqlite3/**/*",
+    "node_modules/sqlite3/**/*",
+    "**/node_modules/puppeteer-core/**/*"
+  ],
+  "afterSign": "scripts/notarize.js",
+  "mac": {
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "build/entitlements.plist",
+    "entitlementsInherit": "build/entitlements.plist"
+  },
+  "dmg": {
+    "sign": false
+  },
+  "afterAllArtifactBuild": "scripts/after-build.js"
+}
