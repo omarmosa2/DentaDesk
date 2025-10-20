@@ -516,6 +516,16 @@ function TreatmentReportsComponent() {
                       <Tooltip
                         formatter={(value, name) => [`${safeNumber(value).toFixed(0)}`, `${safeString(name)}`]}
                         labelFormatter={(label) => `الحالة: ${safeString(label)}`}
+                        contentStyle={{
+                          direction: 'rtl',
+                          textAlign: 'right',
+                          fontFamily: "'Tajawal', sans-serif",
+                          fontSize: '14px',
+                          fontWeight: '400',
+                          lineHeight: '1.8',
+                          letterSpacing: '0.02em',
+                          wordSpacing: '0.08em'
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -546,16 +556,27 @@ function TreatmentReportsComponent() {
                       <XAxis
                         dataKey="category"
                         tickFormatter={(value) => safeString(value)}
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fontFamily: "'Tajawal', sans-serif" }}
                         interval={0}
                         angle={-45}
                         textAnchor="end"
                         height={80}
+                        direction="rtl"
                       />
                       <YAxis />
                       <Tooltip
                         formatter={(value) => [safeNumber(value).toFixed(0), 'عدد العلاجات']}
                         labelFormatter={(label) => `الفئة: ${safeString(label)}`}
+                        contentStyle={{
+                          direction: 'rtl',
+                          textAlign: 'right',
+                          fontFamily: "'Readex Pro', 'Changa', 'Harmattan', sans-serif",
+                          fontSize: '14px',
+                          fontWeight: '400',
+                          lineHeight: '2.0',
+                          letterSpacing: '0.03em',
+                          wordSpacing: '0.1em'
+                        }}
                       />
                       <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} isAnimationActive={false} animationDuration={0} />
                     </BarChart>
@@ -650,11 +671,22 @@ function TreatmentReportsComponent() {
                       <XAxis
                         dataKey="period"
                         tickFormatter={(value) => safeString(value)}
+                        tick={{ fontFamily: "'Readex Pro', 'Changa', sans-serif" }}
+                        direction="rtl"
                       />
                       <YAxis />
                       <Tooltip
                         formatter={(value, name) => [`${safeNumber(value).toFixed(0)}`, `${safeString(name)}`]}
                         labelFormatter={(label) => `الفترة: ${safeString(label)}`}
+                        contentStyle={{
+                          direction: 'rtl',
+                          textAlign: 'right',
+                          fontFamily: "'Changa', 'Baloo Bhaijaan 2', 'Harmattan', sans-serif",
+                          fontSize: '14px',
+                          fontWeight: '400',
+                          lineHeight: '1.8',
+                          letterSpacing: '0.02em'
+                        }}
                       />
                       <Line
                         type="monotone"
@@ -738,7 +770,7 @@ function TreatmentReportsComponent() {
                       </div>
                     </div>
                   ) : (
-                    <Table>
+                    <Table dir="rtl">
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-right">نوع العلاج</TableHead>
@@ -791,7 +823,7 @@ function TreatmentReportsComponent() {
                       </div>
                     </div>
                   ) : (
-                    <Table>
+                    <Table dir="rtl">
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-right">نوع العلاج</TableHead>

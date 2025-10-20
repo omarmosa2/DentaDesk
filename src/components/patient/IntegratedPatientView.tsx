@@ -75,9 +75,14 @@ export default function IntegratedPatientView({
 
   // Format currency
   const formatCurrency = (amount: number) => {
+    // Check if the amount is a whole number (no decimal part)
+    const isWholeNumber = amount % 1 === 0
+
     return new Intl.NumberFormat('ar-EG', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
+      minimumFractionDigits: isWholeNumber ? 0 : 2,
+      maximumFractionDigits: isWholeNumber ? 0 : 2,
     }).format(amount)
   }
 

@@ -263,8 +263,12 @@ export function formatCurrencyWithConfig(amount: number, config: CurrencyConfig)
   }
 
   try {
+    // Check if the amount is a whole number (no decimal part)
+    const isWholeNumber = validAmount % 1 === 0
+
     // Use cached formatter for better performance
-    const formatter = getCurrencyFormatter(config.locale, config.code, config.decimals)
+    // If it's a whole number, use 0 decimals; otherwise use configured decimals
+    const formatter = getCurrencyFormatter(config.locale, config.code, isWholeNumber ? 0 : config.decimals)
     const formattedCurrency = formatter.format(validAmount)
 
     // Always return as-is since we're using English locale
@@ -274,9 +278,12 @@ export function formatCurrencyWithConfig(amount: number, config: CurrencyConfig)
     console.warn(`Error formatting currency ${config.code}, using manual formatting`)
 
     try {
+      // Check if the amount is a whole number (no decimal part)
+      const isWholeNumber = validAmount % 1 === 0
+
       const formatter = getNumberFormatter('en-US', {
-        minimumFractionDigits: config.decimals,
-        maximumFractionDigits: config.decimals,
+        minimumFractionDigits: isWholeNumber ? 0 : config.decimals,
+        maximumFractionDigits: isWholeNumber ? 0 : config.decimals,
       })
       const formattedNumber = formatter.format(validAmount)
 
@@ -287,7 +294,8 @@ export function formatCurrencyWithConfig(amount: number, config: CurrencyConfig)
       }
     } catch (fallbackError) {
       // Ultimate fallback: simple formatting
-      const fixedAmount = validAmount.toFixed(config.decimals)
+      const isWholeNumber = validAmount % 1 === 0
+      const fixedAmount = isWholeNumber ? validAmount.toString() : validAmount.toFixed(config.decimals)
 
       if (config.position === 'before') {
         return `${config.symbol}${fixedAmount}`

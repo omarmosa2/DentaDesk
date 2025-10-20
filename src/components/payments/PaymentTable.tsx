@@ -189,6 +189,7 @@ function PaymentTableComponent({
               <TableHead>رقم الإيصال</TableHead>
               <TableHead>المريض</TableHead>
               <TableHead>المبلغ</TableHead>
+              <TableHead>الخصم</TableHead>
               <TableHead>طريقة الدفع</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead>تاريخ الدفع</TableHead>
@@ -198,7 +199,7 @@ function PaymentTableComponent({
           <TableBody>
             {[...Array(5)].map((_, index) => (
               <TableRow key={index}>
-                {[...Array(7)].map((_, cellIndex) => (
+                {[...Array(8)].map((_, cellIndex) => (
                   <TableCell key={cellIndex}>
                     <div className="h-4 bg-muted animate-pulse rounded" />
                   </TableCell>
@@ -221,6 +222,9 @@ function PaymentTableComponent({
               <SortableHeader field="patient_name">المريض</SortableHeader>
               <TableHead className="text-center">العلاج/الموعد</TableHead>
               <SortableHeader field="amount">المبلغ والرصيد</SortableHeader>
+              <TableHead className="text-center">
+                <span className="arabic-enhanced font-medium">الخصم</span>
+              </TableHead>
               <SortableHeader field="payment_method">طريقة الدفع</SortableHeader>
               <SortableHeader field="status">الحالة</SortableHeader>
               <SortableHeader field="payment_date">تاريخ الدفع</SortableHeader>
@@ -231,7 +235,7 @@ function PaymentTableComponent({
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8">
+              <TableCell colSpan={9} className="text-center py-8">
                 <div className="flex flex-col items-center space-y-2">
                   <DollarSign className="w-12 h-12 text-muted-foreground opacity-50" />
                   <p className="text-muted-foreground">
@@ -266,6 +270,9 @@ function PaymentTableComponent({
                 <SortableHeader field="amount">
                   <span className="arabic-enhanced font-medium">المبلغ والرصيد</span>
                 </SortableHeader>
+                <TableHead className="text-center">
+                  <span className="arabic-enhanced font-medium">الخصم</span>
+                </TableHead>
                 <SortableHeader field="payment_method">
                   <span className="arabic-enhanced font-medium">طريقة الدفع</span>
                 </SortableHeader>
@@ -353,14 +360,14 @@ function PaymentTableComponent({
                           )
                         })()}
 
-                        {payment.appointment_total_cost && (
+                        {payment.total_amount_due && (
                           <div className="text-xs text-muted-foreground">
-                            تكلفة: {formatCurrency(payment.appointment_total_cost)}
+                            تكلفة: {formatCurrency(payment.total_amount_due)}
                           </div>
                         )}
-                        {payment.appointment_remaining_balance !== undefined && payment.appointment_remaining_balance > 0 && (
+                        {payment.remaining_balance !== undefined && payment.remaining_balance > 0 && (
                           <div className="text-xs text-orange-600 dark:text-orange-400">
-                            متبقي: {formatCurrency(payment.appointment_remaining_balance)}
+                            متبقي: {formatCurrency(payment.remaining_balance)}
                           </div>
                         )}
                       </div>
@@ -375,66 +382,75 @@ function PaymentTableComponent({
                       <div className="font-medium text-lg">
                         {formatCurrency(payment.amount)}
                       </div>
-                      {payment.tooth_treatment_id ? (
-                        // للمدفوعات المرتبطة بعلاج
-                        <>
-                          {payment.treatment_total_cost && (
-                            <div className="text-xs text-muted-foreground">
-                              من أصل {formatCurrency(payment.treatment_total_cost)}
-                            </div>
-                          )}
-                          {payment.treatment_total_paid && (
-                            <div className="text-xs text-blue-600 dark:text-blue-400">
-                              إجمالي مدفوع: {formatCurrency(payment.treatment_total_paid)}
-                            </div>
-                          )}
-                          {payment.treatment_remaining_balance && payment.treatment_remaining_balance > 0 && (
+                    {payment.tooth_treatment_id ? (
+                      // للمدفوعات المرتبطة بعلاج - مطابق لنافذة التفاصيل
+                      <>
+                        {payment.treatment_total_cost && (
+                          <div className="text-xs text-muted-foreground">
+                            من أصل {formatCurrency(payment.treatment_total_cost)}
+                          </div>
+                        )}
+                        {payment.treatment_total_paid && payment.treatment_total_paid > 0 && (
+                          <div className="text-xs text-blue-600 dark:text-blue-400">
+                            إجمالي مدفوع: {formatCurrency(payment.treatment_total_paid)}
+                          </div>
+                        )}
+                        {payment.treatment_remaining_balance !== undefined && payment.treatment_remaining_balance > 0 && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400">
+                            متبقي: {formatCurrency(payment.treatment_remaining_balance)}
+                          </div>
+                        )}
+                      </>
+                    ) : payment.appointment_id ? (
+                      // للمدفوعات المرتبطة بموعد - مطابق لنافذة التفاصيل
+                      <>
+                        {payment.total_amount_due && (
+                          <div className="text-xs text-muted-foreground">
+                            من أصل {formatCurrency(payment.total_amount_due)}
+                          </div>
+                        )}
+                        {payment.amount_paid && payment.amount_paid > 0 && (
+                          <div className="text-xs text-blue-600 dark:text-blue-400">
+                            إجمالي مدفوع: {formatCurrency(payment.amount_paid)}
+                          </div>
+                        )}
+                        {payment.remaining_balance !== undefined && payment.remaining_balance > 0 && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400">
+                            متبقي: {formatCurrency(payment.remaining_balance)}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // للمدفوعات العامة - مطابق لنافذة التفاصيل
+                      <>
+                        {payment.total_amount_due && payment.total_amount_due > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            من أصل {formatCurrency(payment.total_amount_due)}
+                          </div>
+                        )}
+                        {(() => {
+                          // حساب المبلغ المتبقي بنفس منطق نافذة التفاصيل
+                          const totalDue = payment.total_amount_due || 0
+                          const totalPaid = payment.amount_paid || payment.amount || 0
+                          const remainingBalance = Math.max(0, totalDue - totalPaid)
+                          return remainingBalance > 0 && (
                             <div className="text-xs text-orange-600 dark:text-orange-400">
-                              متبقي: {formatCurrency(payment.treatment_remaining_balance)}
+                              متبقي: {formatCurrency(remainingBalance)}
                             </div>
-                          )}
-                        </>
-                      ) : payment.appointment_id ? (
-                        // للمدفوعات المرتبطة بموعد
-                        <>
-                          {payment.total_amount_due && (
-                            <div className="text-xs text-muted-foreground">
-                              من أصل {formatCurrency(payment.total_amount_due)}
-                            </div>
-                          )}
-                          {payment.total_amount_due && payment.amount_paid && (
-                            <div className="text-xs text-blue-600 dark:text-blue-400">
-                              إجمالي مدفوع: {formatCurrency(payment.amount_paid)}
-                            </div>
-                          )}
-                          {payment.remaining_balance && payment.remaining_balance > 0 && (
-                            <div className="text-xs text-orange-600 dark:text-orange-400">
-                              متبقي: {formatCurrency(payment.remaining_balance)}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        // للمدفوعات العامة
-                        <>
-                          {payment.total_amount_due && (
-                            <div className="text-xs text-muted-foreground">
-                              من أصل {formatCurrency(payment.total_amount_due)}
-                            </div>
-                          )}
-                          {payment.total_amount_due && (() => {
-                            // حساب المبلغ المتبقي بشكل صحيح للمدفوعات العامة
-                            const totalDue = payment.total_amount_due || 0
-                            const totalPaid = payment.amount || 0
-                            const remainingBalance = Math.max(0, totalDue - totalPaid)
-                            return remainingBalance > 0 && (
-                              <div className="text-xs text-orange-600 dark:text-orange-400">
-                                متبقي: {formatCurrency(remainingBalance)}
-                              </div>
-                            )
-                          })()}
-                        </>
-                      )}
+                          )
+                        })()}
+                      </>
+                    )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {payment.discount_amount && payment.discount_amount > 0 ? (
+                      <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                        -{formatCurrency(payment.discount_amount)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">بدون خصم</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="arabic-enhanced">

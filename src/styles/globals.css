@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+@import url('/fonts/fonts.css');
 
 @tailwind base;
 @tailwind components;
@@ -315,12 +316,33 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Tajawal', 'Segoe UI', 'Tahoma', 'Arial Unicode MS', Arial, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "liga" 0, "kern" 1, "tnum" 1, "lnum" 1;
     direction: rtl; /* RTL support for Arabic */
+    text-align: right;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    unicode-bidi: embed;
+    /* Tajawal optimized settings - no character overlap */
+    font-variant-ligatures: none;
+    font-kerning: normal;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    word-spacing: 0.08em;
+    line-height: 1.8;
+    /* Prevent any character overlap */
+    font-stretch: normal;
+    text-transform: none;
+    /* Enhanced font rendering for Tajawal */
+    -webkit-font-variant-ligatures: none;
+    -moz-font-variant-ligatures: none;
+    -ms-font-variant-ligatures: none;
+    /* Better Arabic character support */
+    font-language-override: 'ARA';
   }
 
   /* Ensure proper dark mode support for all elements */
@@ -393,11 +415,43 @@
     color-scheme: light;
   }
 
-  /* Arabic text optimization */
+  /* Tajawal Arabic text optimization - Perfect clarity with Tajawal */
   [lang="ar"], .arabic-text {
-    font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Tajawal', 'Segoe UI', 'Tahoma', 'Arial Unicode MS', Arial, sans-serif;
     direction: rtl;
     text-align: right;
+    font-feature-settings: 'liga' 0, 'kern' 1, 'calt' 1, 'rlig' 0, 'tnum' 1, 'lnum' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    unicode-bidi: embed;
+    word-break: break-word;
+    hyphens: none;
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    /* Tajawal optimized settings - no character overlap */
+    -webkit-font-feature-settings: "liga" 0, "kern" 1, "calt" 1, "rlig" 0, "tnum" 1, "lnum" 1;
+    -moz-font-feature-settings: "liga" 0, "kern" 1, "calt" 1, "rlig" 0, "tnum" 1, "lnum" 1;
+    font-feature-settings: "liga" 0, "kern" 1, "calt" 1, "rlig" 0, "tnum" 1, "lnum" 1;
+    /* Tajawal optimized spacing */
+    letter-spacing: 0.02em;
+    word-spacing: 0.08em;
+    /* Perfect line height for Tajawal */
+    line-height: 1.8;
+    /* Tajawal clarity settings */
+    font-variant-ligatures: none;
+    font-kerning: normal;
+    font-variant-numeric: tabular-nums;
+    /* Prevent any text transformation */
+    text-transform: none;
+    /* Tajawal enhanced character spacing */
+    font-stretch: normal;
+    font-language-override: 'ARA';
+    /* Additional Tajawal clarity */
+    -webkit-font-variant-ligatures: none;
+    -moz-font-variant-ligatures: none;
+    -ms-font-variant-ligatures: none;
   }
 
   /* Ensure proper contrast in dark mode for Arabic text */
@@ -1864,6 +1918,28 @@
     vertical-align: middle !important;
   }
 
+  /* Enhanced RTL table support */
+  [dir="rtl"] table {
+    direction: rtl;
+    text-align: right;
+  }
+
+  [dir="rtl"] th,
+  [dir="rtl"] td {
+    text-align: right;
+    direction: rtl;
+  }
+
+  [dir="rtl"] th:first-child,
+  [dir="rtl"] td:first-child {
+    text-align: right;
+  }
+
+  [dir="rtl"] th:last-child,
+  [dir="rtl"] td:last-child {
+    text-align: left;
+  }
+
   /* Prevent table overflow */
   .table-center-all .truncate {
     white-space: nowrap;
@@ -1929,6 +2005,150 @@
   }
 
   .dialog-rtl .dialog-content {
+    text-align: right;
+  }
+
+  /* Enhanced RTL for Patient Details Modal */
+  .patient-details-rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .patient-details-rtl .card-header {
+    text-align: right;
+  }
+
+  .patient-details-rtl .card-content {
+    text-align: right;
+  }
+
+  .patient-details-rtl .flex {
+    flex-direction: row-reverse;
+  }
+
+  .patient-details-rtl .justify-between {
+    flex-direction: row-reverse;
+  }
+
+  .patient-details-rtl .space-y-3 > * + * {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  /* RTL Tabs for Patient Details */
+  .patient-tabs-rtl {
+    direction: rtl;
+  }
+
+  .patient-tabs-rtl [role="tablist"] {
+    direction: rtl;
+  }
+
+  .patient-tabs-rtl [role="tab"] {
+    direction: rtl;
+    text-align: center;
+  }
+
+  /* RTL Table layouts for Patient Details */
+  .patient-table-rtl {
+    direction: rtl;
+  }
+
+  .patient-table-rtl th {
+    text-align: right;
+  }
+
+  .patient-table-rtl td {
+    text-align: right;
+  }
+
+  /* RTL Form layouts in Patient Details */
+  .patient-form-rtl {
+    direction: rtl;
+  }
+
+  .patient-form-rtl .form-label {
+    text-align: right;
+  }
+
+  .patient-form-rtl .form-input {
+    text-align: right;
+  }
+
+  .patient-form-rtl .form-textarea {
+    text-align: right;
+  }
+
+  /* RTL Badge layouts in Patient Details */
+  .patient-badge-rtl {
+    direction: rtl;
+    text-align: center;
+  }
+
+  /* RTL Button groups in Patient Details */
+  .patient-buttons-rtl {
+    direction: rtl;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .patient-buttons-rtl .btn {
+    margin-left: 0;
+    margin-right: 0.25rem;
+  }
+
+  /* RTL Statistics cards in Patient Details */
+  .patient-stats-rtl {
+    direction: rtl;
+  }
+
+  .patient-stats-rtl .stats-icon {
+    margin-left: 0.75rem;
+    margin-right: 0;
+  }
+
+  .patient-stats-rtl .stats-content {
+    text-align: right;
+  }
+
+  /* RTL Grid layouts for Patient Details cards */
+  .patient-grid-rtl {
+    direction: rtl;
+    display: grid;
+  }
+
+  /* RTL spacing for Patient Details */
+  .patient-spacing-rtl .space-y-4 > * + * {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .patient-spacing-rtl .space-x-2 > * + * {
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+
+  /* RTL List layouts in Patient Details */
+  .patient-list-rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .patient-list-rtl .list-item {
+    text-align: right;
+  }
+
+  /* RTL Alert/Dialog layouts in Patient Details */
+  .patient-alert-rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .patient-alert-rtl .alert-title {
+    text-align: right;
+  }
+
+  .patient-alert-rtl .alert-description {
     text-align: right;
   }
 
@@ -2965,6 +3185,29 @@
   .chart-container {
     font-family: 'Tajawal', system-ui, sans-serif;
     direction: rtl;
+    text-align: right;
+  }
+
+  .chart-container .recharts-wrapper {
+    direction: rtl;
+  }
+
+  .chart-container .recharts-legend-wrapper {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .chart-container text {
+    font-family: 'Tajawal', sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .chart-container .recharts-cartesian-axis-tick-value {
+    font-family: 'Tajawal', sans-serif;
+    direction: rtl;
+    text-align: right;
   }
 
   .chart-tooltip {

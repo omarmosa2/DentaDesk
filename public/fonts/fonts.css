@@ -58,9 +58,9 @@
 
 /* CSS Variables for consistent font usage */
 :root {
-  --font-arabic: 'Tajawal', 'Cairo', 'Amiri', Arial, sans-serif;
-  --font-arabic-display: 'Tajawal', 'Cairo', Arial, sans-serif;
-  --font-arabic-body: 'Tajawal', Arial, sans-serif;
+  --font-arabic: 'Readex Pro', 'Changa', 'Harmattan', 'Baloo Bhaijaan 2', Arial, sans-serif;
+  --font-arabic-display: 'Scheherazade New', 'Lateef', 'Readex Pro', Arial, sans-serif;
+  --font-arabic-body: 'Readex Pro', 'Changa', 'Harmattan', Arial, sans-serif;
 }
 
 /* Utility classes for Arabic text */
@@ -91,11 +91,17 @@
 .pdf-content {
   font-family: var(--font-arabic);
   direction: rtl;
-  line-height: 1.6;
-  font-feature-settings: "liga" 1, "kern" 1;
+  line-height: 2.0;
+  font-feature-settings: "liga" 0, "kern" 1, "calt" 1, "rlig" 0, "tnum" 1, "lnum" 1, "ss01" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-variant-ligatures: none;
+  font-kerning: normal;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  word-spacing: 0.1em;
+  font-language-override: 'ARA';
 }
 
 .pdf-header {

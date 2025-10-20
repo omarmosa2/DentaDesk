@@ -324,7 +324,7 @@ export const usePaymentStore = create<PaymentStore>()(
         if (searchQuery) {
           filtered = filtered.filter(payment => {
             const patientName = payment.patient ?
-              `${payment.patient.first_name} ${payment.patient.last_name}` : ''
+              payment.patient.full_name : ''
 
             return (
               payment.receipt_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -357,17 +357,18 @@ export const usePaymentStore = create<PaymentStore>()(
       // Analytics
       calculateTotalRevenue: () => {
         const { payments } = get()
-        // حساب إجمالي الإيرادات من جميع المدفوعات المكتملة والجزئية
+        // حساب إجمالي الإيرادات من جميع المدفوعات المكتملة والجزئية (مطابق لنافذة تفاصيل المريض)
         const total = payments
           .filter(p => p.status === 'completed' || p.status === 'partial')
           .reduce((sum, payment) => {
-            // استخدام amount (مبلغ الدفعة الحالية) وليس amount_paid (إجمالي المدفوع للموعد)
+            // استخدام amount (مبلغ الدفعة الحالية) - مطابق لنافذة التفاصيل
             const amount = Number(payment.amount)
 
             if (isNaN(amount) || !isFinite(amount)) {
               console.warn('Invalid payment amount:', payment.amount, 'for payment:', payment.id)
               return sum
             }
+
             return sum + amount
           }, 0)
 
@@ -599,7 +600,20 @@ export const usePaymentStore = create<PaymentStore>()(
 
       getToothTreatmentPaymentSummary: async (toothTreatmentId) => {
         try {
-          return await window.electronAPI.payments.getToothTreatmentSummary(toothTreatmentId)
+          // حساب ملخص مدفوعات العلاج يدوياً من البيانات المحلية
+          const { payments } = get()
+          const treatmentPayments = payments.filter(p => p.tooth_treatment_id === toothTreatmentId)
+
+          const totalPaid = treatmentPayments.reduce((sum, p) => sum + p.amount, 0)
+          const totalCost = treatmentPayments.length > 0 ? treatmentPayments[0].treatment_total_cost || 0 : 0
+          const remainingBalance = Math.max(0, totalCost - totalPaid)
+
+          return {
+            totalPaid,
+            totalCost,
+            remainingBalance,
+            paymentCount: treatmentPayments.length
+          }
         } catch (error) {
           console.error('Failed to get tooth treatment payment summary:', error)
           throw error
@@ -616,11 +630,13 @@ export const usePaymentStore = create<PaymentStore>()(
       },
 
       markAsFailed: async (id) => {
-        await get().updatePayment(id, { status: 'failed' })
+        // يمكن استخدام هذه الوظيفة لأغراض مستقبلية عند إضافة حالة 'failed'
+        console.warn('markAsFailed: حالة failed غير مدعومة حالياً')
       },
 
       markAsRefunded: async (id) => {
-        await get().updatePayment(id, { status: 'refunded' })
+        // يمكن استخدام هذه الوظيفة لأغراض مستقبلية عند إضافة حالة 'refunded'
+        console.warn('markAsRefunded: حالة refunded غير مدعومة حالياً')
       }
       }
     },

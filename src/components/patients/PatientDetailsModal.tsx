@@ -390,18 +390,18 @@ function PatientDetailsModalComponent({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden" dir="rtl">
-        <DialogHeader className="text-right">
-          <div className="flex items-center justify-between">
-            <div className="text-right">
-              <DialogTitle className="text-xl arabic-enhanced text-right">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden patient-details-rtl" dir="rtl">
+        <DialogHeader className="text-right patient-details-rtl">
+          <div className="flex items-center justify-between patient-details-rtl">
+            <div className="text-right patient-details-rtl">
+              <DialogTitle className="text-xl arabic-enhanced text-right patient-details-rtl">
                 تفاصيل المريض - {patient.full_name}
               </DialogTitle>
-              <DialogDescription className="arabic-enhanced text-right">
+              <DialogDescription className="arabic-enhanced text-right patient-details-rtl">
                 معلومات شاملة عن المريض وسجلاته الطبية
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 patient-buttons-rtl">
               <Button
                 variant="outline"
                 size="sm"
@@ -435,8 +435,8 @@ function PatientDetailsModalComponent({
           </div>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden" dir="rtl">
-          <TabsList className="grid w-full grid-cols-4 rtl-tabs" dir="rtl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden patient-tabs-rtl" dir="rtl">
+          <TabsList className="grid w-full grid-cols-4 rtl-tabs patient-tabs-rtl" dir="rtl">
             <TabsTrigger value="info" className="arabic-enhanced flex items-center justify-center gap-2 flex-row-reverse">
               <User className="w-4 h-4" />
               معلومات المريض
@@ -459,11 +459,11 @@ function PatientDetailsModalComponent({
             </TabsTrigger> */}
           </TabsList>
 
-          <div className="mt-4 overflow-y-auto max-h-[calc(90vh-200px)] dialog-rtl" dir="rtl">
-            <TabsContent value="info" className="space-y-4 dialog-rtl" dir="rtl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" dir="rtl">
-                {/* Basic Information */}
-                <Card className="card-rtl">
+          <div className="mt-4 overflow-y-auto max-h-[calc(90vh-200px)] dialog-rtl patient-details-rtl" dir="rtl">
+            <TabsContent value="info" className="space-y-4 dialog-rtl patient-details-rtl" dir="rtl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 patient-grid-rtl" dir="rtl">
+                {/* Basic Information - أولوية عليا */}
+                <Card className="card-rtl patient-details-rtl order-1">
                   <CardHeader className="card-header">
                     <CardTitle className="flex items-center gap-2 text-right">
                       <User className="w-5 h-5" />
@@ -471,33 +471,33 @@ function PatientDetailsModalComponent({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 card-content" dir="rtl">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center patient-details-rtl">
                       <Badge variant="outline">#{patient.serial_number}</Badge>
                       <span className="text-muted-foreground">#:</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{patient.full_name}</span>
+                    <div className="flex justify-between items-center patient-details-rtl">
+                      <span className="font-medium text-lg">{patient.full_name}</span>
                       <span className="text-muted-foreground">الاسم الكامل:</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center patient-details-rtl">
                       <Badge variant={patient.gender === 'male' ? 'default' : 'secondary'}>
                         {patient.gender === 'male' ? 'ذكر' : 'أنثى'}
                       </Badge>
                       <span className="text-muted-foreground">الجنس:</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span>{patient.age} سنة</span>
+                    <div className="flex justify-between items-center patient-details-rtl">
+                      <span className="font-semibold text-primary">{patient.age} سنة</span>
                       <span className="text-muted-foreground">العمر:</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center patient-details-rtl">
                       <span className="text-sm">{formatDate(patient.date_added || patient.created_at)}</span>
                       <span className="text-muted-foreground">تاريخ الإضافة:</span>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Contact Information */}
-                <Card className="card-rtl">
+                {/* Contact Information - أولوية متوسطة */}
+                <Card className="card-rtl patient-details-rtl order-2">
                   <CardHeader className="card-header">
                     <CardTitle className="flex items-center gap-2 text-right">
                       <Phone className="w-5 h-5" />
@@ -505,10 +505,10 @@ function PatientDetailsModalComponent({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 card-content" dir="rtl">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between patient-details-rtl">
                       {patient.phone ? (
                         <div className="flex items-center gap-2">
-                          <span>{patient.phone}</span>
+                          <span className="font-medium">{patient.phone}</span>
                           <Phone className="w-4 h-4 text-muted-foreground" />
                         </div>
                       ) : (
@@ -516,7 +516,7 @@ function PatientDetailsModalComponent({
                       )}
                       <span className="text-muted-foreground">رقم الهاتف:</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between patient-details-rtl">
                       {patient.email ? (
                         <div className="flex items-center gap-2">
                           <span className="text-sm">{patient.email}</span>
@@ -527,11 +527,11 @@ function PatientDetailsModalComponent({
                       )}
                       <span className="text-muted-foreground">البريد الإلكتروني:</span>
                     </div>
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between patient-details-rtl">
                       {patient.address ? (
                         <div className="flex items-start gap-2 max-w-[200px]">
-                          <span className="text-sm text-right">{patient.address}</span>
-                          <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <span className="text-sm text-right leading-relaxed">{patient.address}</span>
+                          <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         </div>
                       ) : (
                         <span className="text-muted-foreground">غير محدد</span>
@@ -541,8 +541,8 @@ function PatientDetailsModalComponent({
                   </CardContent>
                 </Card>
 
-                {/* Medical Information */}
-                <Card className="md:col-span-2 card-rtl">
+                {/* Medical Information - أولوية طبية عالية */}
+                <Card className="md:col-span-2 card-rtl patient-details-rtl order-3">
                   <CardHeader className="card-header">
                     <CardTitle className="flex items-center gap-2 text-right">
                       <Heart className="w-5 h-5" />
@@ -550,43 +550,43 @@ function PatientDetailsModalComponent({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4 card-content" dir="rtl">
-                    <div>
+                    <div className="patient-details-rtl">
                       <h4 className="font-medium mb-2 flex items-center gap-2 text-right">
                         <FileText className="w-4 h-4" />
                         حالة المريض
                       </h4>
-                      <p className="text-sm bg-muted p-3 rounded-md text-right">{patient.patient_condition}</p>
+                      <p className="text-sm bg-muted p-3 rounded-md text-right leading-relaxed">{patient.patient_condition}</p>
                     </div>
 
                     {patient.allergies && (
-                      <div>
+                      <div className="patient-details-rtl">
                         <h4 className="font-medium mb-2 flex items-center gap-2 text-orange-600 dark:text-orange-400 text-right">
                           <AlertTriangle className="w-4 h-4" />
                           الحساسية
                         </h4>
-                        <div className="text-sm bg-orange-50 dark:bg-yellow-900 border border-orange-200 dark:border-yellow-600 p-3 rounded-md text-orange-900 dark:text-yellow-100 text-right">
+                        <div className="text-sm bg-orange-50 dark:bg-yellow-900 border border-orange-200 dark:border-yellow-600 p-3 rounded-md text-orange-900 dark:text-yellow-100 text-right leading-relaxed">
                           {patient.allergies}
                         </div>
                       </div>
                     )}
 
                     {patient.medical_conditions && (
-                      <div>
+                      <div className="patient-details-rtl">
                         <h4 className="font-medium mb-2 flex items-center gap-2 text-right">
                           <Heart className="w-4 h-4" />
                           الحالات الطبية
                         </h4>
-                        <p className="text-sm bg-muted p-3 rounded-md text-right">{patient.medical_conditions}</p>
+                        <p className="text-sm bg-muted p-3 rounded-md text-right leading-relaxed">{patient.medical_conditions}</p>
                       </div>
                     )}
 
                     {patient.notes && (
-                      <div>
+                      <div className="patient-details-rtl">
                         <h4 className="font-medium mb-2 flex items-center gap-2 text-right">
                           <FileText className="w-4 h-4" />
                           ملاحظات إضافية
                         </h4>
-                        <p className="text-sm bg-muted p-3 rounded-md text-right">{patient.notes}</p>
+                        <p className="text-sm bg-muted p-3 rounded-md text-right leading-relaxed">{patient.notes}</p>
                       </div>
                     )}
                   </CardContent>
@@ -594,7 +594,7 @@ function PatientDetailsModalComponent({
               </div>
             </TabsContent>
 
-            <TabsContent value="treatments" className="space-y-4 dialog-rtl" dir="rtl">
+            <TabsContent value="treatments" className="space-y-4 dialog-rtl patient-details-rtl" dir="rtl">
               <div className="flex justify-between items-center mb-4" dir="rtl">
                 <h3 className="text-lg font-medium">العلاجات السنية</h3>
                 <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ function PatientDetailsModalComponent({
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="card-rtl">
+                <Card className="card-rtl patient-details-rtl">
                   <CardHeader className="card-header">
                     <CardTitle className="flex items-center gap-2 text-foreground text-right">
                       <Activity className="w-5 h-5" />
@@ -649,8 +649,8 @@ function PatientDetailsModalComponent({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="card-content" dir="rtl">
-                    <div className="overflow-hidden rounded-lg border border-border" dir="rtl">
-                      <table className="w-full">
+                    <div className="overflow-hidden rounded-lg border border-border patient-table-rtl" dir="rtl">
+                      <table className="w-full patient-table-rtl">
                         <thead className="bg-muted">
                           <tr>
                             <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
@@ -740,10 +740,10 @@ function PatientDetailsModalComponent({
               )}
             </TabsContent>
 
-            <TabsContent value="appointments" className="space-y-4 dialog-rtl" dir="rtl">
+            <TabsContent value="appointments" className="space-y-4 dialog-rtl patient-details-rtl" dir="rtl">
               <div className="flex justify-between items-center mb-4" dir="rtl">
                 <h3 className="text-lg font-medium">المواعيد</h3>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 patient-buttons-rtl">
                   <Button
                     onClick={handlePrintPatientAppointments}
                     variant="outline"
@@ -786,7 +786,7 @@ function PatientDetailsModalComponent({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="card-content" dir="rtl">
-                    <div className="overflow-hidden rounded-lg border border-border" dir="rtl">
+                    <div className="overflow-hidden rounded-lg border border-border patient-table-rtl" dir="rtl">
                       <table className="w-full">
                         <thead className="bg-muted">
                           <tr>
@@ -881,7 +881,7 @@ function PatientDetailsModalComponent({
               )}
             </TabsContent>
 
-            <TabsContent value="payments" className="space-y-4 dialog-rtl" dir="rtl">
+            <TabsContent value="payments" className="space-y-4 dialog-rtl patient-details-rtl" dir="rtl">
               <div className="flex justify-between items-center mb-4" dir="rtl">
                 <h3 className="text-lg font-medium">المدفوعات</h3>
                 <div className="flex items-center gap-2">
@@ -950,6 +950,10 @@ function PatientDetailsModalComponent({
                     const totalAmountPaid = treatmentTotalPaid + appointmentTotalPaid + generalTotalPaid
                     const totalRemainingBalance = treatmentRemaining + appointmentRemaining + generalRemaining
 
+                    // حساب إجمالي الخصومات
+                    const totalDiscounts = patientPayments.reduce((sum, p) => sum + (p.discount_amount || 0), 0)
+                    const netRevenue = totalAmountPaid - totalDiscounts
+
                     // إحصائيات إضافية
                     const pendingPayments = patientPayments.filter(p => p.status === 'pending')
                     const partialPayments = patientPayments.filter(p => p.status === 'partial')
@@ -961,6 +965,11 @@ function PatientDetailsModalComponent({
                           <CardTitle className="flex items-center gap-2 text-primary text-right">
                             <DollarSign className="w-5 h-5" />
                             ملخص المدفوعات الشامل
+                            {totalDiscounts > 0 && (
+                              <span className="text-xs bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-2 py-1 rounded-full">
+                                خصومات: {formatCurrency(totalDiscounts)}
+                              </span>
+                            )}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="card-content" dir="rtl">
@@ -1003,6 +1012,32 @@ function PatientDetailsModalComponent({
                                     علاجات: {formatCurrency(treatmentTotalPaid)} | مواعيد: {formatCurrency(appointmentTotalPaid)} | عام: {formatCurrency(generalTotalPaid)}
                                   </td>
                                 </tr>
+                                {totalDiscounts > 0 && (
+                                  <tr>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                      إجمالي الخصومات
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                      -{formatCurrency(totalDiscounts)}
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                                      خصومات من جميع المدفوعات
+                                    </td>
+                                  </tr>
+                                )}
+                                {totalDiscounts > 0 && (
+                                  <tr className="bg-emerald-50 dark:bg-emerald-900/20">
+                                    <td className="px-4 py-3 text-sm font-medium text-foreground">
+                                      الإيرادات الصافية
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                      {formatCurrency(netRevenue)}
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                                      بعد خصم الخصومات من إجمالي المدفوعات
+                                    </td>
+                                  </tr>
+                                )}
                                 <tr className="bg-muted/50">
                                   <td className="px-4 py-3 text-sm font-medium text-foreground">
                                     المبلغ المتبقي
@@ -1075,6 +1110,9 @@ function PatientDetailsModalComponent({
                               </th>
                               <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
                                 المبلغ المدفوع
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                                الخصم
                               </th>
                               <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
                                 الإجمالي المطلوب
@@ -1167,6 +1205,15 @@ function PatientDetailsModalComponent({
                                   </td>
                                   <td className="px-3 py-2 text-xs font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(payment.amount)}
+                                  </td>
+                                  <td className="px-3 py-2 text-xs text-center">
+                                    {payment.discount_amount && payment.discount_amount > 0 ? (
+                                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                        -{formatCurrency(payment.discount_amount)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted-foreground">بدون خصم</span>
+                                    )}
                                   </td>
                                   <td className="px-3 py-2 text-xs text-foreground">
                                     {totalDue > 0 ? formatCurrency(totalDue) : '-'}
