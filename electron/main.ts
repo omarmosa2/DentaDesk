@@ -406,6 +406,219 @@ if (!gotTheLock) {
       }
     })
 
+    // Doctor IPC Handlers
+    ipcMain.handle('db:doctors:getAll', async () => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:getAll request')
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          return []
+        }
+        
+        const doctors = await databaseService.getAllDoctors()
+        console.log(`✅ Retrieved ${doctors.length} doctors`)
+        return doctors
+      } catch (error) {
+        console.error('❌ Error getting doctors:', error)
+        return []
+      }
+    })
+
+    ipcMain.handle('db:doctors:getById', async (_event, id) => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:getById request for id:', id)
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          return null
+        }
+        
+        const doctor = await databaseService.getDoctorById(id)
+        console.log(`✅ Retrieved doctor:`, doctor)
+        return doctor
+      } catch (error) {
+        console.error('❌ Error getting doctor:', error)
+        return null
+      }
+    })
+
+    ipcMain.handle('db:doctors:create', async (_event, doctorData) => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:create request with data:', doctorData)
+        console.log('🔧 Main: Event details:', {
+          eventType: _event.type,
+          senderId: _event.sender.id,
+          frameId: _event.frameId
+        })
+        console.log('🔧 Main: Doctor data validation:', {
+          hasName: !!doctorData.name,
+          hasSpecialty: !!doctorData.specialty,
+          dataType: typeof doctorData,
+          keys: Object.keys(doctorData),
+          doctorData: doctorData
+        })
+        
+        // Validate required fields
+        if (!doctorData.name || doctorData.name.trim() === '') {
+          throw new Error('Doctor name is required')
+        }
+        if (!doctorData.specialty || doctorData.specialty.trim() === '') {
+          throw new Error('Doctor specialty is required')
+        }
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          throw new Error('Database service not available')
+        }
+        
+        console.log('✅ Database service is available, creating doctor...')
+        console.log('🔍 Doctor data validation:', {
+          name: doctorData.name,
+          specialty: doctorData.specialty,
+          hasRequiredFields: !!(doctorData.name && doctorData.specialty)
+        })
+        
+        console.log('🔧 Main: About to call databaseService.createDoctor...')
+        const newDoctor = await databaseService.createDoctor(doctorData)
+        console.log('✅ Doctor created successfully:', newDoctor.id)
+        console.log('✅ Doctor details:', newDoctor)
+        return newDoctor
+      } catch (error) {
+        console.error('❌ Error creating doctor:', error)
+        console.error('❌ Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : 'No stack trace',
+          name: error instanceof Error ? error.name : 'Unknown',
+          type: typeof error,
+          doctorData: doctorData
+        })
+        
+        // Create a serializable error object
+        const errorMessage = error instanceof Error
+          ? error.message
+          : 'Failed to create doctor in main process'
+        
+        const serializableError = {
+          message: errorMessage,
+          name: error instanceof Error ? error.name : 'Error',
+          stack: error instanceof Error ? error.stack : undefined,
+          type: typeof error
+        }
+        
+        console.error('❌ Throwing serializable error:', serializableError)
+        throw serializableError
+      }
+    })
+
+    ipcMain.handle('db:doctors:update', async (_event, id, doctorData) => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:update request for ID:', id)
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          throw new Error('Database service not available')
+        }
+        
+        const updatedDoctor = await databaseService.updateDoctor(id, doctorData)
+        console.log('✅ Doctor updated successfully:', id)
+        return updatedDoctor
+      } catch (error) {
+        console.error('❌ Error updating doctor:', error)
+        throw error
+      }
+    })
+
+    ipcMain.handle('db:doctors:delete', async (_event, id) => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:delete request for ID:', id)
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          return false
+        }
+        
+        await databaseService.deleteDoctor(id)
+        console.log('✅ Doctor deleted successfully:', id)
+        return true
+      } catch (error) {
+        console.error('❌ Error deleting doctor:', error)
+        return false
+      }
+    })
+
+    ipcMain.handle('db:doctors:search', async (_event, query) => {
+      try {
+        console.log('🔧 Main: Handling db:doctors:search request with query:', query)
+        
+        // Wait for database service to be available
+        let attempts = 0
+        const maxAttempts = 10
+        while (!databaseService && attempts < maxAttempts) {
+          console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+        
+        if (!databaseService) {
+          console.error('❌ Database service not available after waiting')
+          return []
+        }
+        
+        const doctors = await databaseService.searchDoctors(query)
+        console.log(`✅ Found ${doctors.length} doctors matching query`)
+        return doctors
+      } catch (error) {
+        console.error('❌ Error searching doctors:', error)
+        return []
+      }
+    })
+
     // Lab Orders IPC Handlers
     ipcMain.handle('db:labOrders:getAll', async () => {
       try {
@@ -532,8 +745,8 @@ if (!gotTheLock) {
         })
         
         // Create a serializable error object
-        const errorMessage = error instanceof Error 
-          ? error.message 
+        const errorMessage = error instanceof Error
+          ? error.message
           : 'Failed to create lab order in main process'
         
         const serializableError = {

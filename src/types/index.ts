@@ -27,10 +27,20 @@ export interface Treatment {
   updated_at: string
 }
 
+export interface Doctor {
+  id: string
+  name: string
+  specialty: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Appointment {
   id: string
   patient_id: string
   treatment_id?: string
+  doctor_id?: string
+  doctor_specialty?: string
   title: string
   description?: string
   start_time: string
@@ -43,6 +53,7 @@ export interface Appointment {
   // Populated fields
   patient?: Patient
   treatment?: Treatment
+  doctor?: Doctor
 }
 
 export interface Payment {

@@ -1117,6 +1117,128 @@ ipcMain.handle('db:patients:search', async (_, query) => {
   }
 })
 
+// Doctor IPC Handlers
+ipcMain.handle('db:doctors:getAll', async () => {
+  try {
+    if (!databaseService) {
+      console.error('❌ Database service not available')
+      return []
+    }
+    const doctors = await databaseService.getAllDoctors()
+    return doctors
+  } catch (error) {
+    console.error('❌ Error getting doctors:', error)
+    return []
+  }
+})
+
+ipcMain.handle('db:doctors:getById', async (_, id) => {
+  try {
+    if (!databaseService) {
+      console.error('❌ Database service not available')
+      return null
+    }
+    const doctor = await databaseService.getDoctorById(id)
+    return doctor
+  } catch (error) {
+    console.error('❌ Error getting doctor:', error)
+    return null
+  }
+})
+
+ipcMain.handle('db:doctors:create', async (_, doctor) => {
+  try {
+    console.log('🔧 Main: Handling db:doctors:create request', { name: doctor.name, specialty: doctor.specialty })
+    
+    // Wait for database service to be available
+    let attempts = 0
+    const maxAttempts = 10
+    while (!databaseService && attempts < maxAttempts) {
+      console.log(`⏳ Waiting for database service... (attempt ${attempts + 1}/${maxAttempts})`)
+      await new Promise(resolve => setTimeout(resolve, 100))
+      attempts++
+    }
+    
+    if (!databaseService) {
+      console.error('❌ Database service not available after waiting')
+      throw new Error('Database service not available')
+    }
+    
+    // Try to test if doctors table exists by calling getAllDoctors
+    // This will fail gracefully if table doesn't exist, and createDoctor will handle it
+    try {
+      const existingDoctors = await databaseService.getAllDoctors()
+      console.log('✅ Doctors table exists, found', existingDoctors.length, 'doctors')
+    } catch (testError) {
+      console.warn('⚠️ Warning: Could not access doctors table:', testError?.message || 'Unknown error')
+      // This is OK - createDoctor will create the table if needed
+    }
+    
+    console.log('🔧 Main: About to call databaseService.createDoctor...')
+    const newDoctor = await databaseService.createDoctor(doctor)
+    console.log('✅ Doctor created successfully:', newDoctor.id, newDoctor.name)
+    return newDoctor
+  } catch (error) {
+    console.error('❌ Error creating doctor:', error)
+    console.error('❌ Error details:', {
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'Unknown',
+      type: typeof error
+    })
+    // Create a serializable error object with better error message extraction
+    let errorMessage = 'Failed to create doctor in main process'
+    
+    if (error instanceof Error) {
+      errorMessage = error.message || error.toString()
+    } else if (typeof error === 'object' && error !== null) {
+      // Try to extract message from error object
+      if ('message' in error) {
+        errorMessage = String((error ).message)
+      } else if ('error' in error) {
+        errorMessage = String((error ).error)
+      } else {
+        errorMessage = JSON.stringify(error)
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error
+    }
+    
+    console.error('❌ Throwing error with message:', errorMessage)
+    // Throw a simple Error object that can be serialized
+    const serializableError = new Error(errorMessage)
+    throw serializableError
+  }
+})
+
+ipcMain.handle('db:doctors:update', async (_, id, doctor) => {
+  try {
+    if (!databaseService) {
+      console.error('❌ Database service not available')
+      throw new Error('Database service not available')
+    }
+    const updatedDoctor = await databaseService.updateDoctor(id, doctor)
+    return updatedDoctor
+  } catch (error) {
+    console.error('❌ Error updating doctor:', error)
+    throw error
+  }
+})
+
+ipcMain.handle('db:doctors:delete', async (_, id) => {
+  try {
+    if (!databaseService) {
+      console.error('❌ Database service not available')
+      return false
+    }
+    const result = await databaseService.deleteDoctor(id)
+    return result
+  } catch (error) {
+    console.error('❌ Error deleting doctor:', error)
+    throw error
+  }
+})
+
 // Appointment IPC Handlers
 ipcMain.handle('db:appointments:getAll', async () => {
   try {

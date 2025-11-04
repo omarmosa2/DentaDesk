@@ -1,7 +1,8 @@
 import React, { useState, useEffect, memo } from 'react'
-import { X, Calendar, Clock, User } from 'lucide-react'
-import { Appointment, Patient, Treatment } from '../types'
+import { X, Calendar, Clock, User, Stethoscope } from 'lucide-react'
+import { Appointment, Patient, Treatment, Doctor } from '../types'
 import { useThemeClasses } from '../contexts/ThemeContext'
+import { useDoctorStore } from '../store/doctorStore'
 import {
   Dialog,
   DialogContent,
@@ -49,12 +50,23 @@ function AddAppointmentDialogComponent({
   const [formData, setFormData] = useState({
     patient_id: '',
     gender: '',
+    doctor_id: '',
+    doctor_specialty: '',
     description: '',
     start_time: '',
     end_time: '',
     status: 'scheduled' as 'scheduled' | 'completed' | 'cancelled' | 'no_show',
     notes: ''
   })
+
+  const { doctors, loadDoctors } = useDoctorStore()
+
+  useEffect(() => {
+    // تحميل الأطباء عند فتح الـ dialog
+    if (isOpen) {
+      loadDoctors()
+    }
+  }, [isOpen, loadDoctors])
 
   const { toast } = useToast()
 
@@ -83,6 +95,8 @@ function AddAppointmentDialogComponent({
       setFormData({
         patient_id: initialData.patient_id || '',
         gender: selectedPatient?.gender === 'male' ? 'ذكر' : selectedPatient?.gender === 'female' ? 'أنثى' : '',
+        doctor_id: initialData.doctor_id || '',
+        doctor_specialty: initialData.doctor_specialty || '',
         description: initialData.description || '',
         start_time: formatForInput(startDate),
         end_time: formatForInput(endDate),
@@ -135,6 +149,8 @@ function AddAppointmentDialogComponent({
       setFormData({
         patient_id: '',
         gender: '',
+        doctor_id: '',
+        doctor_specialty: '',
         description: '',
         start_time: formatForInput(now),
         end_time: formatForInput(oneHourLater),
@@ -237,7 +253,7 @@ function AddAppointmentDialogComponent({
       ? `موعد ${selectedPatient.full_name} - ${dateStr} ${timeStr}`
       : `موعد جديد - ${dateStr} ${timeStr}`
 
-    // Create appointment data without gender field
+    // Create appointment data without gender field (it's only for display)
     const { gender, ...appointmentDataWithoutGender } = formData
 
     const appointmentData = {
@@ -393,6 +409,48 @@ function AddAppointmentDialogComponent({
                 <p className="text-xs text-muted-foreground">
                   اتركه فارغاً لحساب ساعة واحدة تلقائياً من وقت البداية
                 </p>
+              </div>
+            </div>
+
+            {/* Doctor Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center">
+                  <Stethoscope className="w-4 h-4 ml-1" />
+                  اسم الطبيب
+                </Label>
+                <Select
+                  value={formData.doctor_id}
+                  onValueChange={(value) => {
+                    const selectedDoctor = doctors.find(d => d.id === value)
+                    setFormData(prev => ({
+                      ...prev,
+                      doctor_id: value,
+                      doctor_specialty: selectedDoctor?.specialty || ''
+                    }))
+                  }}
+                >
+                  <SelectTrigger className="bg-background border-input text-foreground">
+                    <SelectValue placeholder="اختر الطبيب" className="text-muted-foreground" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors.map(doctor => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        {doctor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>اختصاص الطبيب</Label>
+                <Input
+                  value={formData.doctor_specialty}
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
+                  placeholder="سيتم ملؤه تلقائياً"
+                />
               </div>
             </div>
 

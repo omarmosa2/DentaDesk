@@ -4,6 +4,7 @@ import { usePaymentStore } from '@/store/paymentStore'
 import { usePatientStore } from '@/store/patientStore'
 import { usePrescriptionStore } from '@/store/prescriptionStore'
 import { useInventoryStore } from '@/store/inventoryStore'
+import { useDoctorStore } from '@/store/doctorStore'
 
 /**
  * Hook لضمان تحديث الجداول في الوقت الفعلي عند تغيير البيانات
@@ -15,6 +16,7 @@ export function useRealTimeTableSync() {
   const { loadPatients } = usePatientStore()
   const { loadPrescriptions } = usePrescriptionStore()
   const { loadItems: loadInventoryItems } = useInventoryStore()
+  const { loadDoctors } = useDoctorStore()
 
   const pendingUpdatesRef = useRef<Set<string>>(new Set())
   const rafIdRef = useRef<number | null>(null)
@@ -29,19 +31,20 @@ export function useRealTimeTableSync() {
         loadPayments(),
         loadPatients(),
         loadPrescriptions(),
-        loadInventoryItems()
+        loadInventoryItems(),
+        loadDoctors()
       ])
       console.log('✅ All tables refreshed successfully')
     } catch (error) {
       console.error('❌ Error refreshing tables:', error)
     }
-  }, [loadAppointments, loadPayments, loadPatients, loadPrescriptions, loadInventoryItems])
+  }, [loadAppointments, loadPayments, loadPatients, loadPrescriptions, loadInventoryItems, loadDoctors])
 
   // دالة لإعادة تحميل جدول محدد مع تجميع
-  const refreshTable = useCallback(async (tableType: string) => {
-    console.log(`🔄 Refreshing ${tableType} table...`)
+  const refreshTable = useCallback(async (table: string) => {
+    console.log(`🔄 Refreshing table: ${table}`)
     try {
-      switch (tableType) {
+      switch (table) {
         case 'appointments':
           await loadAppointments()
           break
@@ -57,14 +60,17 @@ export function useRealTimeTableSync() {
         case 'inventory':
           await loadInventoryItems()
           break
+        case 'doctors':
+          await loadDoctors()
+          break
         default:
-          console.warn('Unknown table type:', tableType)
+          console.warn(`Unknown table: ${table}`)
       }
-      console.log(`✅ ${tableType} table refreshed successfully`)
+      console.log(`✅ ${table} table refreshed successfully`)
     } catch (error) {
-      console.error(`❌ Error refreshing ${tableType} table:`, error)
+      console.error(`❌ Error refreshing ${table} table:`, error)
     }
-  }, [loadAppointments, loadPayments, loadPatients, loadPrescriptions, loadInventoryItems])
+  }, [loadAppointments, loadPayments, loadPatients, loadPrescriptions, loadInventoryItems, loadDoctors])
 
   // دالة معالجة الأحداث المجمعة
   const batchRefresh = useCallback(() => {
@@ -108,7 +114,11 @@ export function useRealTimeTableSync() {
       'inventory-added': ['inventory'],
       'inventory-updated': ['inventory'],
       'inventory-deleted': ['inventory'],
-      'inventory-changed': ['inventory']
+      'inventory-changed': ['inventory'],
+      'doctor-added': ['doctors', 'appointments'], // تحديث الأطباء والمواعيد المرتبطة
+      'doctor-updated': ['doctors', 'appointments'],
+      'doctor-deleted': ['doctors', 'appointments'],
+      'doctor-changed': ['doctors', 'appointments']
     }
 
     // معالج واحد لجميع الأحداث

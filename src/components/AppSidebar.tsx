@@ -46,10 +46,11 @@ const navigationItems = [
     url: "appointments",
     icon: CalendarDays,
   },
+
   {
-    title: "الواردات",
-    url: "payments",
-    icon: DollarSign,
+    title: "العلاجات",
+    url: "dental-treatments",
+    icon: Stethoscope,
   },
   // {
   //   title: "المخزون",
@@ -67,9 +68,14 @@ const navigationItems = [
   //   icon: Pill,
   // },
   {
-    title: "العلاجات",
-    url: "dental-treatments",
-    icon: Stethoscope,
+    title: "الواردات",
+    url: "payments",
+    icon: DollarSign,
+  },
+    {
+    title: "إدارة الأطباء",
+    url: "doctors",
+    icon: User2,
   },
   // {
   //   title: "احتياجات العيادة",

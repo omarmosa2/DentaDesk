@@ -30,6 +30,7 @@ const ReportsPage = React.lazy(() => import('./pages/Reports'))
 const EnhancedDashboard = React.lazy(() => import('./pages/EnhancedDashboard'))
 const PatientsPage = React.lazy(() => import('./pages/Patients'))
 const AppointmentsPage = React.lazy(() => import('./pages/Appointments'))
+const DoctorsPage = React.lazy(() => import('./pages/Doctors'))
 const Labs = React.lazy(() => import('./pages/Labs'))
 const Medications = React.lazy(() => import('./pages/Medications'))
 const DentalTreatments = React.lazy(() => import('./pages/DentalTreatments'))
@@ -637,7 +638,9 @@ function AppContent() {
       case 'patients':
         return <PatientsPage onNavigateToTreatments={setActiveTab} onNavigateToPayments={setActiveTab} />;
       case 'appointments':
-        return <AppointmentsPage />;
+        return <AppointmentsPage />
+      case 'doctors':
+        return <DoctorsPage />;
       case 'payments':
         return <PaymentsPage />;
       case 'inventory':

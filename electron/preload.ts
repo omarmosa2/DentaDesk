@@ -23,6 +23,16 @@ export interface ElectronAPI {
     search: (query: string) => Promise<any[]>
   }
 
+  // Doctor operations
+  doctors: {
+    getAll: () => Promise<any[]>
+    getById: (id: string) => Promise<any>
+    create: (doctor: any) => Promise<any>
+    update: (id: string, doctor: any) => Promise<any>
+    delete: (id: string) => Promise<boolean>
+    search: (query: string) => Promise<any[]>
+  }
+
   // Payment operations
   payments: {
     getAll: () => Promise<any[]>
@@ -280,6 +290,65 @@ const electronAPI: ElectronAPI = {
     delete: (id) => ipcRenderer.invoke('db:appointments:delete', id),
     checkConflict: (startTime, endTime, excludeId) => ipcRenderer.invoke('db:appointments:checkConflict', startTime, endTime, excludeId),
     search: (query) => ipcRenderer.invoke('db:appointments:search', query),
+  },
+
+  doctors: {
+    getAll: async () => {
+      try {
+        return await ipcRenderer.invoke('db:doctors:getAll')
+      } catch (error) {
+        console.error('Error in doctors.getAll:', error)
+        throw error
+      }
+    },
+    getById: async (id) => {
+      try {
+        return await ipcRenderer.invoke('db:doctors:getById', id)
+      } catch (error) {
+        console.error('Error in doctors.getById:', error)
+        throw error
+      }
+    },
+    create: async (doctor) => {
+      try {
+        console.log('🔄 Preload: Calling db:doctors:create with:', doctor)
+        const result = await ipcRenderer.invoke('db:doctors:create', doctor)
+        console.log('✅ Preload: Doctor created successfully:', result)
+        return result
+      } catch (error) {
+        console.error('❌ Preload: Error in doctors.create:', error)
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : (typeof error === 'object' && error !== null && 'message' in error)
+            ? String((error as any).message)
+            : 'فشل في إنشاء الطبيب - خطأ غير معروف'
+        throw new Error(errorMessage)
+      }
+    },
+    update: async (id, doctor) => {
+      try {
+        return await ipcRenderer.invoke('db:doctors:update', id, doctor)
+      } catch (error) {
+        console.error('Error in doctors.update:', error)
+        throw error
+      }
+    },
+    delete: async (id) => {
+      try {
+        return await ipcRenderer.invoke('db:doctors:delete', id)
+      } catch (error) {
+        console.error('Error in doctors.delete:', error)
+        throw error
+      }
+    },
+    search: async (query) => {
+      try {
+        return await ipcRenderer.invoke('db:doctors:search', query)
+      } catch (error) {
+        console.error('Error in doctors.search:', error)
+        throw error
+      }
+    },
   },
 
   payments: {

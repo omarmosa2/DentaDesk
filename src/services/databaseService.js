@@ -273,6 +273,9 @@ class DatabaseService {
     // Check if clinic needs table exists and create it if it doesn't
     this.ensureClinicNeedsTableExists()
 
+    // Check if doctors table exists and create it if it doesn't
+    this.ensureDoctorsTableExists()
+
     // Apply migrations
     const migrations = [
       {
@@ -5384,6 +5387,276 @@ class DatabaseService {
       ORDER BY payment_date DESC, created_at DESC
     `)
     return stmt.all()
+  }
+
+  // ==================== DOCTOR METHODS ====================
+
+  /**
+   * Ensure doctors table exists
+   */
+  ensureDoctorsTableExists() {
+    try {
+      console.log('🔍 [DEBUG] Checking if doctors table exists...')
+
+      // Check if doctors table exists
+      const doctorsTableExists = this.db.prepare(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='doctors'
+      `).get()
+
+      console.log('🔍 [DEBUG] Doctors table status:', !!doctorsTableExists)
+
+      // Create doctors table if it doesn't exist
+      if (!doctorsTableExists) {
+        console.log('🏗️ [DEBUG] Creating doctors table...')
+        this.db.exec(`
+          CREATE TABLE doctors (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            specialty TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `)
+        console.log('✅ [DEBUG] Doctors table created successfully')
+
+        // Create indexes for better performance
+        this.createDoctorIndexes()
+      } else {
+        console.log('✅ [DEBUG] Doctors table already exists')
+      }
+
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in ensureDoctorsTableExists:', error)
+      console.error('❌ [DEBUG] Error stack:', error.stack)
+      throw error
+    }
+  }
+
+  createDoctorIndexes() {
+    try {
+      console.log('🔍 Creating doctor indexes...')
+
+      const indexes = [
+        'CREATE INDEX IF NOT EXISTS idx_doctors_name ON doctors(name)',
+        'CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty)'
+      ]
+
+      indexes.forEach(indexSql => {
+        try {
+          this.db.exec(indexSql)
+        } catch (error) {
+          console.warn('Doctor index creation warning:', error.message)
+        }
+      })
+
+      console.log('✅ Doctor indexes created successfully')
+    } catch (error) {
+      console.error('❌ Error creating doctor indexes:', error)
+    }
+  }
+
+  /**
+   * Get all doctors
+   */
+  async getAllDoctors() {
+    console.log('🔍 [DEBUG] getAllDoctors() called')
+
+    try {
+      this.ensureConnection()
+      console.log('✅ [DEBUG] Database connection ensured')
+
+      this.ensureDoctorsTableExists() // Ensure tables exist before querying
+      console.log('✅ [DEBUG] Doctors table existence ensured')
+
+      const stmt = this.db.prepare('SELECT * FROM doctors ORDER BY name')
+      const doctors = stmt.all()
+      console.log(`📊 [DEBUG] Found ${doctors.length} doctors in database:`, doctors)
+
+      return doctors
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in getAllDoctors():', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get doctor by ID
+   */
+  async getDoctorById(id) {
+    console.log('🔍 [DEBUG] getDoctorById() called with id:', id)
+
+    try {
+      this.ensureConnection()
+      this.ensureDoctorsTableExists()
+
+      const stmt = this.db.prepare('SELECT * FROM doctors WHERE id = ?')
+      const doctor = stmt.get(id)
+      console.log(`📊 [DEBUG] Found doctor:`, doctor)
+
+      return doctor
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in getDoctorById():', error)
+      throw error
+    }
+  }
+
+  /**
+   * Create a new doctor
+   */
+  async createDoctor(doctor) {
+    console.log('🔍 [DEBUG] createDoctor() called with data:', doctor)
+
+    try {
+      this.ensureConnection()
+      console.log('✅ [DEBUG] Database connection ensured for createDoctor')
+
+      this.ensureDoctorsTableExists() // Ensure tables exist before inserting
+      console.log('✅ [DEBUG] Doctors table existence ensured for createDoctor')
+
+      const id = uuidv4()
+      const now = new Date().toISOString()
+      console.log('🆔 [DEBUG] Generated ID:', id, 'Timestamp:', now)
+
+      // Validate input data
+      if (!doctor.name || doctor.name.trim() === '') {
+        throw new Error('Doctor name is required')
+      }
+      if (!doctor.specialty || doctor.specialty.trim() === '') {
+        throw new Error('Doctor specialty is required')
+      }
+      console.log('✅ [DEBUG] Doctor data validation passed')
+
+      console.log('👨‍⚕️ [DEBUG] Creating doctor with data:', {
+        id,
+        name: doctor.name,
+        specialty: doctor.specialty,
+        created_at: now,
+        updated_at: now
+      })
+
+      const stmt = this.db.prepare(`
+        INSERT INTO doctors (
+          id, name, specialty, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?)
+      `)
+      console.log('✅ [DEBUG] SQL statement prepared')
+
+      const result = stmt.run(
+        id, doctor.name, doctor.specialty, now, now
+      )
+      console.log('✅ [DEBUG] SQL statement executed. Result:', result)
+
+      console.log('✅ [DEBUG] Doctor created successfully:', {
+        id,
+        changes: result.changes,
+        lastInsertRowid: result.lastInsertRowid
+      })
+
+      // Force WAL checkpoint to ensure data is written
+      console.log('💾 [DEBUG] Forcing WAL checkpoint...')
+      const checkpoint = this.db.pragma('wal_checkpoint(TRUNCATE)')
+      console.log('💾 [DEBUG] Checkpoint result:', checkpoint)
+
+      // Verify the doctor was actually inserted
+      const verifyStmt = this.db.prepare('SELECT * FROM doctors WHERE id = ?')
+      const insertedDoctor = verifyStmt.get(id)
+      console.log('🔍 [DEBUG] Verification - Doctor found in database:', insertedDoctor)
+
+      const finalResult = { ...doctor, id, created_at: now, updated_at: now }
+      console.log('📤 [DEBUG] Returning final result:', finalResult)
+
+      return finalResult
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in createDoctor():', error)
+      console.error('❌ [DEBUG] Error stack:', error.stack)
+      throw error
+    }
+  }
+
+  /**
+   * Update a doctor
+   */
+  async updateDoctor(id, updates) {
+    console.log('🔍 [DEBUG] updateDoctor() called with id:', id, 'updates:', updates)
+
+    try {
+      this.ensureConnection()
+      this.ensureDoctorsTableExists()
+
+      const now = new Date().toISOString()
+      const fields = Object.keys(updates).filter(key => key !== 'id')
+      const setClause = fields.map(field => `${field} = ?`).join(', ')
+      const values = fields.map(field => updates[field])
+
+      const stmt = this.db.prepare(`
+        UPDATE doctors
+        SET ${setClause}, updated_at = ?
+        WHERE id = ?
+      `)
+
+      const result = stmt.run(...values, now, id)
+      console.log('✅ [DEBUG] Doctor updated successfully:', { id, changes: result.changes })
+
+      // Force WAL checkpoint
+      const checkpoint = this.db.pragma('wal_checkpoint(TRUNCATE)')
+      console.log('💾 [DEBUG] Checkpoint result:', checkpoint)
+
+      return { ...updates, id, updated_at: now }
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in updateDoctor():', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete a doctor
+   */
+  async deleteDoctor(id) {
+    console.log('🔍 [DEBUG] deleteDoctor() called with id:', id)
+
+    try {
+      this.ensureConnection()
+      this.ensureDoctorsTableExists()
+
+      const stmt = this.db.prepare('DELETE FROM doctors WHERE id = ?')
+      const result = stmt.run(id)
+      console.log('✅ [DEBUG] Doctor deleted successfully:', { id, changes: result.changes })
+
+      // Force WAL checkpoint
+      const checkpoint = this.db.pragma('wal_checkpoint(TRUNCATE)')
+      console.log('💾 [DEBUG] Checkpoint result:', checkpoint)
+
+      return result.changes > 0
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in deleteDoctor():', error)
+      throw error
+    }
+  }
+
+  /**
+   * Search doctors
+   */
+  async searchDoctors(query) {
+    console.log('🔍 [DEBUG] searchDoctors() called with query:', query)
+
+    try {
+      this.ensureConnection()
+      this.ensureDoctorsTableExists()
+
+      const stmt = this.db.prepare(`
+        SELECT * FROM doctors
+        WHERE name LIKE ? OR specialty LIKE ?
+        ORDER BY name
+      `)
+      const searchTerm = `%${query}%`
+      const doctors = stmt.all(searchTerm, searchTerm)
+      console.log(`📊 [DEBUG] Found ${doctors.length} doctors matching query:`, query)
+
+      return doctors
+    } catch (error) {
+      console.error('❌ [DEBUG] Error in searchDoctors():', error)
+      throw error
+    }
   }
 }
 

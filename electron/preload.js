@@ -13,6 +13,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     search: (query) => ipcRenderer.invoke('db:patients:search', query)
   },
 
+  // Doctor operations
+  doctors: {
+    getAll: () => ipcRenderer.invoke('db:doctors:getAll'),
+    getById: (id) => ipcRenderer.invoke('db:doctors:getById', id),
+    create: (doctor) => ipcRenderer.invoke('db:doctors:create', doctor),
+    update: (id, doctor) => ipcRenderer.invoke('db:doctors:update', id, doctor),
+    delete: (id) => ipcRenderer.invoke('db:doctors:delete', id),
+    search: (query) => ipcRenderer.invoke('db:doctors:search', query)
+  },
+
   // Appointment operations
   appointments: {
     getAll: () => ipcRenderer.invoke('db:appointments:getAll'),

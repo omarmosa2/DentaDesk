@@ -12,7 +12,8 @@ import type {
   ClinicSettings,
   DashboardStats,
   Lab,
-  LabOrder
+  LabOrder,
+  Doctor
 } from '../types'
 import { MigrationService } from './migrationService'
 import { IntegrationMigrationService } from './integrationMigrationService'
@@ -622,6 +623,69 @@ export class DatabaseService {
           console.log('✅ Migration 9 completed successfully')
         }
 
+        // Migration 10: Add doctors table and update appointments table
+        if (!appliedMigrations.has(10)) {
+          console.log('🔄 Applying migration 10: Add doctors table and update appointments table')
+
+          // Check if doctors table exists
+          const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]
+          const tableNames = tables.map(t => t.name)
+
+          if (!tableNames.includes('doctors')) {
+            // Create doctors table
+            this.db.exec(`
+              CREATE TABLE doctors (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                specialty TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              )
+            `)
+
+            // Create indexes for doctors table
+            this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_name ON doctors(name)')
+            this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty)')
+          }
+
+          // Check if appointments table has doctor_id and doctor_specialty columns
+          const appointmentColumns = this.db.prepare("PRAGMA table_info(appointments)").all() as any[]
+          const appointmentColumnNames = appointmentColumns.map(col => col.name)
+
+          if (!appointmentColumnNames.includes('doctor_id')) {
+            this.db.exec('ALTER TABLE appointments ADD COLUMN doctor_id TEXT')
+            this.db.exec('CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON appointments(doctor_id)')
+          }
+
+          if (!appointmentColumnNames.includes('doctor_specialty')) {
+            this.db.exec('ALTER TABLE appointments ADD COLUMN doctor_specialty TEXT')
+          }
+
+          // Add foreign key constraint if not exists (SQLite doesn't support adding foreign keys via ALTER TABLE)
+          // We'll handle the relationship in the application layer
+
+          this.db.prepare('INSERT INTO schema_migrations (version, description) VALUES (?, ?)').run(10, 'Add doctors table and update appointments table')
+          console.log('✅ Migration 10 completed successfully')
+        } else {
+          // Migration already applied, but verify table exists
+          const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='doctors'").all() as { name: string }[]
+          if (tables.length === 0) {
+            console.log('⚠️ Migration 10 marked as applied but doctors table missing, creating it...')
+            this.db.exec(`
+              CREATE TABLE IF NOT EXISTS doctors (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                specialty TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              )
+            `)
+            this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_name ON doctors(name)')
+            this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty)')
+            console.log('✅ Doctors table created (fallback)')
+          }
+        }
+
         // Force check for dental_treatments table tooth_number constraint
         try {
           const dentalTreatmentsSchema = this.db.prepare(`
@@ -842,6 +906,147 @@ export class DatabaseService {
     return stmt.all(searchTerm, searchTerm, searchTerm, searchTerm) as Patient[]
   }
 
+  // Doctor operations
+  async getAllDoctors(): Promise<any[]> {
+    try {
+      const stmt = this.db.prepare(`
+        SELECT * FROM doctors
+        ORDER BY name
+      `)
+      const doctors = stmt.all() as any[]
+      console.log('📋 getAllDoctors: Retrieved', doctors.length, 'doctors from database')
+      if (doctors.length > 0) {
+        console.log('📋 Sample doctor:', doctors[0])
+      }
+      return doctors
+    } catch (error) {
+      console.error('❌ Error getting all doctors:', error)
+      return []
+    }
+  }
+
+  async getDoctorById(id: string): Promise<any | null> {
+    const stmt = this.db.prepare(`
+      SELECT * FROM doctors WHERE id = ?
+    `)
+    return (stmt.get(id) as any) || null
+  }
+
+  async createDoctor(doctor: Omit<any, 'id' | 'created_at' | 'updated_at'>): Promise<any> {
+    const id = uuidv4()
+    const now = new Date().toISOString()
+
+    try {
+      // Validate input
+      if (!doctor.name || !doctor.specialty) {
+        throw new Error('اسم الطبيب واختصاصه مطلوبان')
+      }
+
+      // Check if doctors table exists
+      const tables = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='doctors'").all() as { name: string }[]
+      if (tables.length === 0) {
+        console.log('⚠️ Doctors table does not exist, creating it...')
+        this.db.exec(`
+          CREATE TABLE IF NOT EXISTS doctors (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            specialty TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `)
+        this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_name ON doctors(name)')
+        this.db.exec('CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty)')
+        console.log('✅ Doctors table created successfully')
+      }
+
+      const stmt = this.db.prepare(`
+        INSERT INTO doctors (id, name, specialty, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+
+      const result = stmt.run(id, doctor.name.trim(), doctor.specialty.trim(), now, now)
+      
+      if (result.changes === 0) {
+        throw new Error('فشل في إضافة الطبيب إلى قاعدة البيانات')
+      }
+      
+      console.log('✅ Doctor inserted into database:', { id, name: doctor.name, specialty: doctor.specialty, changes: result.changes })
+      
+      // Force WAL checkpoint to ensure data is written
+      this.db.pragma('wal_checkpoint(TRUNCATE)')
+      
+      // Verify the doctor was created by fetching it
+      const createdDoctor = this.getDoctorById(id)
+      
+      if (!createdDoctor) {
+        throw new Error('فشل في إنشاء الطبيب - لم يتم العثور على البيانات بعد الحفظ')
+      }
+      
+      console.log('✅ Doctor verified after creation:', createdDoctor)
+      return createdDoctor
+    } catch (error) {
+      console.error('❌ Error creating doctor in database:', error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error(`فشل في إنشاء الطبيب: ${String(error)}`)
+    }
+  }
+
+  async updateDoctor(id: string, updates: Partial<any>): Promise<any | null> {
+    const now = new Date().toISOString()
+    const fields: string[] = []
+    const values: any[] = []
+
+    if (updates.name !== undefined) {
+      fields.push('name = ?')
+      values.push(updates.name)
+    }
+    if (updates.specialty !== undefined) {
+      fields.push('specialty = ?')
+      values.push(updates.specialty)
+    }
+
+    if (fields.length === 0) {
+      return this.getDoctorById(id)
+    }
+
+    fields.push('updated_at = ?')
+    values.push(now)
+    values.push(id)
+
+    const stmt = this.db.prepare(`
+      UPDATE doctors
+      SET ${fields.join(', ')}
+      WHERE id = ?
+    `)
+
+    stmt.run(...values)
+
+    return this.getDoctorById(id)
+  }
+
+  async deleteDoctor(id: string): Promise<boolean> {
+    try {
+      // Check if doctor is used in appointments
+      const appointmentCheck = this.db.prepare(`
+        SELECT COUNT(*) as count FROM appointments WHERE doctor_id = ?
+      `).get(id) as { count: number }
+
+      if (appointmentCheck.count > 0) {
+        throw new Error('لا يمكن حذف الطبيب لأنه مرتبط بمواعيد موجودة')
+      }
+
+      const stmt = this.db.prepare('DELETE FROM doctors WHERE id = ?')
+      const result = stmt.run(id)
+      return result.changes > 0
+    } catch (error) {
+      console.error(`❌ Failed to delete doctor ${id}:`, error)
+      throw error
+    }
+  }
+
   async searchAppointments(query: string): Promise<Appointment[]> {
     const stmt = this.db.prepare(`
       SELECT
@@ -1017,14 +1222,14 @@ export class DatabaseService {
 
       const stmt = this.db.prepare(`
         INSERT INTO appointments (
-          id, patient_id, treatment_id, title, description, start_time, end_time,
+          id, patient_id, treatment_id, doctor_id, doctor_specialty, title, description, start_time, end_time,
           status, cost, notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       const result = stmt.run(
-        id, appointment.patient_id, treatmentId, appointment.title,
-        appointment.description, appointment.start_time, appointment.end_time,
+        id, appointment.patient_id, treatmentId, appointment.doctor_id || null, appointment.doctor_specialty || null,
+        appointment.title, appointment.description, appointment.start_time, appointment.end_time,
         appointment.status, appointment.cost, appointment.notes, now, now
       )
 
@@ -1108,6 +1313,8 @@ export class DatabaseService {
       UPDATE appointments SET
         patient_id = COALESCE(?, patient_id),
         treatment_id = COALESCE(?, treatment_id),
+        doctor_id = COALESCE(?, doctor_id),
+        doctor_specialty = COALESCE(?, doctor_specialty),
         title = COALESCE(?, title),
         description = COALESCE(?, description),
         start_time = COALESCE(?, start_time),
@@ -1120,8 +1327,8 @@ export class DatabaseService {
     `)
 
     const result = stmt.run(
-      appointment.patient_id, appointment.treatment_id, appointment.title,
-      appointment.description, appointment.start_time, appointment.end_time,
+      appointment.patient_id, appointment.treatment_id, appointment.doctor_id || null, appointment.doctor_specialty || null,
+      appointment.title, appointment.description, appointment.start_time, appointment.end_time,
       appointment.status, appointment.cost, appointment.notes, now, id
     )
 

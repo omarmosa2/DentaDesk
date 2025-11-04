@@ -1,6 +1,14 @@
 declare global {
   interface Window {
     electronAPI: {
+      doctors: {
+        getAll: () => Promise<any[]>
+        getById: (id: string) => Promise<any>
+        create: (doctor: any) => Promise<any>
+        update: (id: string, doctor: any) => Promise<any>
+        delete: (id: string) => Promise<boolean>
+        search: (query: string) => Promise<any[]>
+      }
       patients: {
         getAll: () => Promise<any[]>
         getById: (id: string) => Promise<any>

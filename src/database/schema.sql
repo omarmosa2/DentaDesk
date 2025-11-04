@@ -29,11 +29,26 @@ CREATE TABLE IF NOT EXISTS treatments (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Doctors table
+CREATE TABLE IF NOT EXISTS doctors (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    specialty TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for doctors table
+CREATE INDEX IF NOT EXISTS idx_doctors_name ON doctors(name);
+CREATE INDEX IF NOT EXISTS idx_doctors_specialty ON doctors(specialty);
+
 -- Appointments table
 CREATE TABLE IF NOT EXISTS appointments (
     id TEXT PRIMARY KEY,
     patient_id TEXT NOT NULL,
     treatment_id TEXT,
+    doctor_id TEXT,
+    doctor_specialty TEXT,
     title TEXT NOT NULL,
     description TEXT,
     start_time DATETIME NOT NULL,
@@ -46,6 +61,9 @@ CREATE TABLE IF NOT EXISTS appointments (
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     FOREIGN KEY (treatment_id) REFERENCES treatments(id) ON DELETE SET NULL
 );
+
+-- Create index for appointments doctor_id
+CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON appointments(doctor_id);
 
 -- Payments table
 CREATE TABLE IF NOT EXISTS payments (
