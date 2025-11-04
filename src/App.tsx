@@ -90,6 +90,7 @@ import { Search } from 'lucide-react'
 import { Appointment } from './types'
 import './App.css'
 import './styles/globals.css'
+import TodayAppointmentsButton from '@/components/TodayAppointmentsButton'
 
 // Lazy load GlobalSearch component
 const GlobalSearch = React.lazy(() => import('@/components/globalThis/GlobalSearch'))
@@ -925,6 +926,7 @@ function AppContent() {
         )}
 
         <Toaster />
+        <TodayAppointmentsButton />
       </SidebarProvider>
     );
   }
