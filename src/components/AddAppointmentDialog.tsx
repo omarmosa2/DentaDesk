@@ -334,8 +334,8 @@ function AddAppointmentDialogComponent({
             </h3>
 
             {/* Patient and Gender Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div className="space-y-5">
                 <Label className="flex items-center">
                   <User className="w-4 h-4 ml-1" />
                   المريض *
@@ -379,7 +379,7 @@ function AddAppointmentDialogComponent({
             </div>
 
             {/* Date and Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
                 <Label className="flex items-center">
                   <Calendar className="w-4 h-4 ml-1" />
@@ -407,14 +407,13 @@ function AddAppointmentDialogComponent({
                   placeholder="سيتم حساب الوقت تلقائياً (ساعة واحدة)"
                 />
                 <p className="text-xs text-muted-foreground">
-                  اتركه فارغاً لحساب ساعة واحدة تلقائياً من وقت البداية
-                </p>
+سيتم حساب ساعة تلقائياً                </p>
               </div>
             </div>
 
             {/* Doctor Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div className="space-y-5">
                 <Label className="flex items-center">
                   <Stethoscope className="w-4 h-4 ml-1" />
                   اسم الطبيب
