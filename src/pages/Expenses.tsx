@@ -334,10 +334,10 @@ export default function Expenses() {
                 تصدير Excel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleExportPDF} className="arabic-enhanced">
+              {/* <DropdownMenuItem onClick={handleExportPDF} className="arabic-enhanced">
                 <FileText className="w-4 h-4 ml-2" />
                 تصدير PDF
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={() => setShowAddDialog(true)}>

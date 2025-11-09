@@ -265,7 +265,7 @@ export default function Patients({ onNavigateToTreatments, onNavigateToPayments 
                 تصدير Excel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={async () => {
                   if (filteredPatientsWithAdvancedFilters.length === 0) {
                     notify.noDataToExport('لا توجد بيانات مرضى للتصدير')
@@ -283,7 +283,7 @@ export default function Patients({ onNavigateToTreatments, onNavigateToPayments 
               >
                 <FileText className="w-4 h-4 ml-2" />
                 تصدير PDF
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">

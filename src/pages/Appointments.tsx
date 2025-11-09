@@ -406,7 +406,7 @@ export default function Appointments() {
               تصدير Excel
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={async () => {
                 if (filteredAppointments.length === 0) {
                   notify.noDataToExport('لا توجد بيانات مواعيد للتصدير')
@@ -423,7 +423,7 @@ export default function Appointments() {
               className="arabic-enhanced"
             >
               PDF تصدير
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
           <Button onClick={() => {

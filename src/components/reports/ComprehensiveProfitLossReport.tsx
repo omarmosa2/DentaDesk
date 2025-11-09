@@ -872,7 +872,7 @@ function ComprehensiveProfitLossReportComponent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={handleExportPDF}
@@ -880,7 +880,7 @@ function ComprehensiveProfitLossReportComponent() {
           >
             <Download className="w-4 h-4 ml-2" />
             {isExporting ? 'جاري التصدير...' : 'تصدير PDF'}
-          </Button>
+          </Button> */}
           <Button
             variant="outline"
             size="sm"

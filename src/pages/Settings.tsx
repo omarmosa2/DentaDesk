@@ -781,7 +781,7 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 <span className="whitespace-nowrap">تحديث</span>
               </button>
-              <button
+              {/* <button
                 onClick={async () => {
                   // Export settings data
                   const settingsData = {
@@ -811,7 +811,7 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
               >
                 <Download className="w-4 h-4" />
                 <span className="whitespace-nowrap">تصدير الإعدادات</span>
-              </button>
+              </button> */}
             </div>
           </div>
 

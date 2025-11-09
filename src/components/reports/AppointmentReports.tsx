@@ -340,7 +340,7 @@ export default function AppointmentReports() {
             <Download className="w-4 h-4 ml-2" />
             تصدير اكسل
           </Button>
-          <Button
+          {/* <Button
             variant="default"
             size="sm"
             onClick={async () => {
@@ -386,7 +386,7 @@ export default function AppointmentReports() {
           >
             <Download className="w-4 h-4 ml-2" />
             تصدير PDF
-          </Button>
+          </Button> */}
         </div>
       </div>
 

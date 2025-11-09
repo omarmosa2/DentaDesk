@@ -234,7 +234,7 @@ export default function PatientReports() {
             <Download className="w-4 h-4 ml-2" />
             تصدير اكسل
           </Button>
-          <Button
+          {/* <Button
             variant="default"
             size="sm"
             onClick={async () => {
@@ -325,7 +325,7 @@ export default function PatientReports() {
           >
             <Download className="w-4 h-4 ml-2" />
             {isExporting ? 'جاري التصدير...' : 'تصدير PDF'}
-          </Button>
+          </Button> */}
         </div>
       </div>
 

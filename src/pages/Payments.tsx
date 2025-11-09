@@ -254,7 +254,7 @@ export default function Payments() {
                 تصدير Excel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={async () => {
                   if (payments.length === 0) {
                     notify.noDataToExport('لا توجد بيانات مدفوعات للتصدير')
@@ -301,7 +301,7 @@ export default function Payments() {
               >
                 <FileText className="w-4 h-4 ml-2" />
                 تصدير PDF
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={handleAddPayment}>
