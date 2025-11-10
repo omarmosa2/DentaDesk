@@ -1321,15 +1321,6 @@ ${invoiceSettings.discount_reason ? `💸 سبب الخصم: ${invoiceSettings.d
                 </Button>
               </div>
 
-              <Button
-                onClick={handleExportPDF}
-                disabled={!pendingSummary}
-                variant="outline"
-                className="w-full h-8 text-xs"
-              >
-                <Download className="w-3 h-3 mr-1" />
-                تصدير PDF
-              </Button>
             </div>
           </div>
 
