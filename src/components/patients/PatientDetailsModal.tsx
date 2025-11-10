@@ -402,7 +402,7 @@ function PatientDetailsModalComponent({
               </DialogDescription>
             </div>
             <div className="flex items-center gap-2 patient-buttons-rtl">
-              {/* <Button
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePrintPatientRecord}
@@ -410,7 +410,7 @@ function PatientDetailsModalComponent({
               >
                 <Printer className="w-4 h-4" />
                 طباعة السجل
-              </Button> */}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
