@@ -56,10 +56,10 @@ export class PdfService {
   // Enhanced typography settings with improved readability
   private static readonly TYPOGRAPHY = {
     fonts: {
-      primary: "'Tajawal', 'Cairo', 'Segoe UI', system-ui, sans-serif",
-      secondary: "'Tajawal', 'Cairo', 'Segoe UI', system-ui, sans-serif",
-      heading: "'Tajawal', 'Cairo', 'Segoe UI', system-ui, sans-serif",
-      monospace: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace"
+      primary: "'Tajawal', 'Cairo', 'Amiri', 'Noto Sans Arabic', 'Arial', sans-serif",
+      secondary: "'Tajawal', 'Cairo', 'Amiri', 'Noto Sans Arabic', 'Arial', sans-serif",
+      heading: "'Tajawal', 'Cairo', 'Amiri', 'Noto Sans Arabic', 'Arial', sans-serif",
+      monospace: "'Courier New', monospace"
     },
     sizes: {
       h1: '32px',
@@ -197,11 +197,10 @@ export class PdfService {
   // Create enhanced CSS styles for professional reports
   private static createEnhancedStyles(): string {
     return `
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=Cairo:wght@400;600;700&family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
-        @import url('/fonts/Tajawal-Regular.ttf');
-        @import url('/fonts/Tajawal-Bold.ttf');
-        @import url('/fonts/Tajawal-Medium.ttf');
-
         * {
           box-sizing: border-box;
           margin: 0;
@@ -220,6 +219,7 @@ export class PdfService {
            letter-spacing: ${this.TYPOGRAPHY.letterSpacing.normal};
            -webkit-font-smoothing: antialiased;
            -moz-osx-font-smoothing: grayscale;
+           text-rendering: optimizeLegibility;
         }
 
         /* Enhanced Header Styles */
@@ -3152,51 +3152,65 @@ export class PdfService {
   // Convert HTML to PDF using html2canvas + jsPDF with Web Worker support
   private static async convertHTMLToPDF(htmlContent: string, filename: string): Promise<void> {
     try {
-      // Create a temporary div to render HTML
-      const tempDiv = document.createElement('div')
-      tempDiv.innerHTML = htmlContent
-      tempDiv.style.position = 'absolute'
-      tempDiv.style.left = '-9999px'
-      tempDiv.style.top = '-9999px'
-      tempDiv.style.width = '800px' // Fixed width for consistent rendering
-      tempDiv.style.fontFamily = 'Arial, sans-serif'
-      tempDiv.style.direction = 'rtl'
-      tempDiv.style.fontSize = '14px'
-      tempDiv.style.lineHeight = '1.6'
-      tempDiv.style.color = '#000'
-      tempDiv.style.background = '#fff'
-      tempDiv.style.padding = '20px'
-
-      document.body.appendChild(tempDiv)
-
-      // Wait a bit for fonts to load
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      // Check if Web Worker is available for large content
-      const isLargeContent = htmlContent.length > 50000 || tempDiv.scrollHeight > 5000
-      const useWebWorker = isLargeContent && typeof Worker !== 'undefined'
-
-      let canvas: HTMLCanvasElement
-
-      if (useWebWorker) {
-        // Use Web Worker for heavy processing
-        canvas = await this.processPDFWithWebWorker(tempDiv)
-      } else {
-        // Use main thread for smaller content
-        canvas = await html2canvas(tempDiv, {
-          scale: 1.5, // Higher quality
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          width: 800,
-          height: tempDiv.scrollHeight,
-          scrollX: 0,
-          scrollY: 0
-        })
+      // Create a temporary iframe for better rendering with proper fonts
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'absolute'
+      iframe.style.left = '-9999px'
+      iframe.style.top = '-9999px'
+      iframe.style.width = '800px'
+      iframe.style.height = '1px'
+      
+      document.body.appendChild(iframe)
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+      if (!iframeDoc) {
+        throw new Error('Failed to access iframe document')
       }
 
-      // Remove temporary div
-      document.body.removeChild(tempDiv)
+      // Write HTML content with proper font loading
+      iframeDoc.open()
+      iframeDoc.write(htmlContent)
+      iframeDoc.close()
+
+      // Wait for fonts and images to load
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Wait for fonts to be fully loaded
+      if (iframeDoc.fonts) {
+        await iframeDoc.fonts.ready
+      }
+      
+      // Additional wait to ensure everything is rendered
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      const bodyElement = iframeDoc.body
+      if (!bodyElement) {
+        throw new Error('Failed to get iframe body')
+      }
+
+      // Set proper height for iframe
+      iframe.style.height = bodyElement.scrollHeight + 'px'
+
+      // Convert to canvas with higher quality settings for Arabic text
+      const canvas = await html2canvas(bodyElement, {
+        scale: 2, // Higher quality for better text rendering
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: bodyElement.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800,
+        windowHeight: bodyElement.scrollHeight,
+        logging: false,
+        imageTimeout: 0,
+        removeContainer: false,
+        foreignObjectRendering: true // Better text rendering
+      })
+
+      // Remove iframe
+      document.body.removeChild(iframe)
 
       // Create PDF asynchronously with chunked processing
       await this.createPDFAsync(canvas, filename)
