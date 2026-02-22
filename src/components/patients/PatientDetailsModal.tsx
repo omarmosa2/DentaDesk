@@ -464,7 +464,7 @@ function PatientDetailsModalComponent({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-hidden patient-details-rtl"
+        className="max-w-6xl max-h-[95vh] overflow-hidden patient-details-rtl"
         dir="rtl"
       >
         <DialogHeader className="text-right patient-details-rtl">
@@ -556,7 +556,7 @@ function PatientDetailsModalComponent({
           </TabsList>
 
           <div
-            className="mt-4 overflow-y-auto max-h-[calc(90vh-200px)] dialog-rtl patient-details-rtl"
+            className="mt-4 overflow-y-auto max-h-[calc(95vh-200px)] dialog-rtl patient-details-rtl"
             dir="rtl"
           >
             <TabsContent
@@ -1232,32 +1232,32 @@ function PatientDetailsModalComponent({
                         <CardContent className="card-content" dir="rtl">
                           {/* جدول ملخص المدفوعات */}
                           <div
-                            className="overflow-hidden rounded-lg border border-border"
+                            className="overflow-x-auto rounded-lg border border-border"
                             dir="rtl"
                           >
-                            <table className="w-full">
+                            <table className="w-full min-w-[600px]">
                               <thead className="bg-muted">
                                 <tr>
-                                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                  <th className="px-6 py-4 text-right text-base font-semibold text-muted-foreground">
                                     البيان
                                   </th>
-                                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                  <th className="px-6 py-4 text-right text-base font-semibold text-muted-foreground">
                                     المبلغ
                                   </th>
-                                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
+                                  <th className="px-6 py-4 text-right text-base font-semibold text-muted-foreground">
                                     التفاصيل
                                   </th>
                                 </tr>
                               </thead>
                               <tbody className="bg-background divide-y divide-border">
                                 <tr>
-                                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     الإجمالي المطلوب
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-bold text-blue-600 dark:text-blue-400">
+                                  <td className="px-6 py-4 text-base font-bold text-blue-600 dark:text-blue-400">
                                     {formatCurrency(totalAmountDue)}
                                   </td>
-                                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     علاجات: {formatCurrency(treatmentTotalDue)}{" "}
                                     | مواعيد:{" "}
                                     {formatCurrency(appointmentTotalDue)} | عام:{" "}
@@ -1265,13 +1265,13 @@ function PatientDetailsModalComponent({
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     المبلغ المدفوع
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">
+                                  <td className="px-6 py-4 text-base font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(totalAmountPaid)}
                                   </td>
-                                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     علاجات: {formatCurrency(treatmentTotalPaid)}{" "}
                                     | مواعيد:{" "}
                                     {formatCurrency(appointmentTotalPaid)} |
@@ -1280,35 +1280,35 @@ function PatientDetailsModalComponent({
                                 </tr>
                                 {totalDiscounts > 0 && (
                                   <tr>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                    <td className="px-6 py-4 text-base text-muted-foreground">
                                       إجمالي الخصومات
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                    <td className="px-6 py-4 text-base font-bold text-emerald-600 dark:text-emerald-400">
                                       -{formatCurrency(totalDiscounts)}
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                                    <td className="px-6 py-4 text-base text-muted-foreground">
                                       خصومات من جميع المدفوعات
                                     </td>
                                   </tr>
                                 )}
                                 {totalDiscounts > 0 && (
                                   <tr className="bg-emerald-50 dark:bg-emerald-900/20">
-                                    <td className="px-4 py-3 text-sm font-medium text-foreground">
+                                    <td className="px-6 py-4 text-base font-medium text-foreground">
                                       الإيرادات الصافية
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                    <td className="px-6 py-4 text-base font-bold text-emerald-600 dark:text-emerald-400">
                                       {formatCurrency(netRevenue)}
                                     </td>
-                                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                                    <td className="px-6 py-4 text-base text-muted-foreground">
                                       بعد خصم الخصومات من إجمالي المدفوعات
                                     </td>
                                   </tr>
                                 )}
                                 <tr className="bg-muted/50">
-                                  <td className="px-4 py-3 text-sm font-medium text-foreground">
+                                  <td className="px-6 py-4 text-base font-medium text-foreground">
                                     المبلغ المتبقي
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-bold">
+                                  <td className="px-6 py-4 text-base font-bold">
                                     <span
                                       className={
                                         totalRemainingBalance > 0
@@ -1319,12 +1319,12 @@ function PatientDetailsModalComponent({
                                       {formatCurrency(totalRemainingBalance)}
                                     </span>
                                     {totalRemainingBalance === 0 && (
-                                      <span className="mr-2 text-xs text-green-600 dark:text-green-400">
+                                      <span className="mr-3 text-base text-green-600 dark:text-green-400 font-semibold">
                                         ✓ مكتمل
                                       </span>
                                     )}
                                   </td>
-                                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     علاجات: {formatCurrency(treatmentRemaining)}{" "}
                                     | مواعيد:{" "}
                                     {formatCurrency(appointmentRemaining)} |
@@ -1332,32 +1332,32 @@ function PatientDetailsModalComponent({
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     حالات الدفع
                                   </td>
-                                  <td className="px-4 py-3 text-sm">
+                                  <td className="px-6 py-4 text-base">
                                     <div className="flex gap-2 flex-wrap">
                                       <Badge
                                         variant="secondary"
-                                        className="text-xs"
+                                        className="text-base"
                                       >
                                         مكتمل: {completedPayments.length}
                                       </Badge>
                                       <Badge
                                         variant="outline"
-                                        className="text-xs"
+                                        className="text-base"
                                       >
                                         جزئي: {partialPayments.length}
                                       </Badge>
                                       <Badge
                                         variant="destructive"
-                                        className="text-xs"
+                                        className="text-base"
                                       >
                                         آجل: {pendingPayments.length}
                                       </Badge>
                                     </div>
                                   </td>
-                                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                                  <td className="px-6 py-4 text-base text-muted-foreground">
                                     إجمالي المدفوعات: {patientPayments.length}
                                   </td>
                                 </tr>
@@ -1385,34 +1385,34 @@ function PatientDetailsModalComponent({
                         <table className="w-full">
                           <thead className="bg-muted">
                             <tr>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 #
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 النوع
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 التفاصيل
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 تاريخ الدفع
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 المبلغ المدفوع
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 الخصم
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 الإجمالي المطلوب
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 المتبقي
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 طريقة الدفع
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                              <th className="px-1 py-3 text-right text-sm font-medium text-muted-foreground">
                                 الحالة
                               </th>
                             </tr>
@@ -1495,10 +1495,10 @@ function PatientDetailsModalComponent({
                                   key={payment.id}
                                   className="hover:bg-muted/50 transition-colors"
                                 >
-                                  <td className="px-3 py-2 text-xs text-foreground">
+                                  <td className="px-4 py-3 text-sm text-foreground">
                                     {index + 1}
                                   </td>
-                                  <td className="px-3 py-2 text-xs">
+                                  <td className="px-4 py-3 text-sm">
                                     <Badge
                                       variant={
                                         paymentType === "علاج"
@@ -1507,12 +1507,12 @@ function PatientDetailsModalComponent({
                                           ? "secondary"
                                           : "outline"
                                       }
-                                      className="text-xs"
+                                      className="text-sm"
                                     >
                                       {paymentType}
                                     </Badge>
                                   </td>
-                                  <td className="px-3 py-2 text-xs text-foreground max-w-32">
+                                  <td className="px-4 py-3 text-sm text-foreground max-w-64">
                                     <div
                                       className="truncate"
                                       title={paymentDetails}
@@ -1520,19 +1520,19 @@ function PatientDetailsModalComponent({
                                       {paymentDetails}
                                     </div>
                                     {payment.tooth_treatment?.tooth_number && (
-                                      <div className="text-xs text-muted-foreground">
+                                      <div className="text-sm text-muted-foreground">
                                         سن #
                                         {payment.tooth_treatment.tooth_number}
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-3 py-2 text-xs text-foreground">
+                                  <td className="px-4 py-3 text-sm text-foreground">
                                     {formatDate(payment.payment_date)}
                                   </td>
-                                  <td className="px-3 py-2 text-xs font-bold text-green-600 dark:text-green-400">
+                                  <td className="px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(payment.amount)}
                                   </td>
-                                  <td className="px-3 py-2 text-xs text-center">
+                                  <td className="px-4 py-3 text-sm text-center">
                                     {payment.discount_amount &&
                                     payment.discount_amount > 0 ? (
                                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
@@ -1547,12 +1547,12 @@ function PatientDetailsModalComponent({
                                       </span>
                                     )}
                                   </td>
-                                  <td className="px-3 py-2 text-xs text-foreground">
+                                  <td className="px-4 py-3 text-sm text-foreground">
                                     {totalDue > 0
                                       ? formatCurrency(totalDue)
                                       : "-"}
                                   </td>
-                                  <td className="px-3 py-2 text-xs font-medium">
+                                  <td className="px-4 py-3 text-sm font-medium">
                                     {remaining !== undefined ? (
                                       <span
                                         className={
@@ -1567,7 +1567,7 @@ function PatientDetailsModalComponent({
                                       "-"
                                     )}
                                   </td>
-                                  <td className="px-3 py-2 text-xs text-muted-foreground">
+                                  <td className="px-4 py-3 text-sm text-muted-foreground">
                                     {payment.payment_method === "cash"
                                       ? "نقداً"
                                       : payment.payment_method ===
@@ -1575,10 +1575,10 @@ function PatientDetailsModalComponent({
                                       ? "تحويل بنكي"
                                       : payment.payment_method}
                                   </td>
-                                  <td className="px-3 py-2 text-xs">
+                                  <td className="px-4 py-3 text-sm">
                                     <Badge
                                       variant={status.variant}
-                                      className="text-xs"
+                                      className="text-sm"
                                     >
                                       {status.label}
                                     </Badge>
