@@ -64,6 +64,8 @@ interface MultipleToothTreatmentsProps {
   onReorderTreatments: (treatmentIds: string[]) => Promise<void>
   onSessionStatsUpdate?: () => void
   onTreatmentUpdate?: () => void
+  editingTreatmentId?: string | null
+  setEditingTreatmentId?: (id: string | null) => void
 }
 
 export default function MultipleToothTreatments({
@@ -76,7 +78,9 @@ export default function MultipleToothTreatments({
   onDeleteTreatment,
   onReorderTreatments,
   onSessionStatsUpdate,
-  onTreatmentUpdate
+  onTreatmentUpdate,
+  editingTreatmentId: externalEditingTreatment,
+  setEditingTreatmentId: setExternalEditingTreatment
 }: MultipleToothTreatmentsProps) {
   const { isDarkMode } = useTheme()
   const { createPayment, updatePayment, getPaymentsByPatient } = usePaymentStore()
@@ -84,7 +88,12 @@ export default function MultipleToothTreatments({
   const { labs, loadLabs } = useLabStore()
   const { createLabOrder, updateLabOrder, deleteLabOrder, getLabOrdersByTreatment } = useLabOrderStore()
   const [isAddingTreatment, setIsAddingTreatment] = useState(false)
-  const [editingTreatment, setEditingTreatment] = useState<string | null>(null)
+  const [internalEditingTreatment, setInternalEditingTreatment] = useState<string | null>(null)
+  
+  // استخدم الـ prop الخارجي إذا تم توفيره، وإلا استخدم الحالة المحلية
+  const editingTreatment = externalEditingTreatment !== undefined ? externalEditingTreatment : internalEditingTreatment
+  const setEditingTreatment = setExternalEditingTreatment || setInternalEditingTreatment
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [treatmentToDelete, setTreatmentToDelete] = useState<string | null>(null)

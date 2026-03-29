@@ -25,6 +25,7 @@ import DentalImage from './DentalImage'
 import './dental-images.css'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/contexts/ThemeContext'
+import CompletedTreatmentActions from '@/components/treatments/CompletedTreatmentActions'
 import {
   Layers,
   Camera,
@@ -40,7 +41,10 @@ import {
   Upload,
   X,
   Eye,
-  GitCompare
+  GitCompare,
+  MoreVertical,
+  Edit2,
+  History
 } from 'lucide-react'
 
 interface EnhancedToothDetailsDialogProps {
@@ -88,6 +92,7 @@ export default function EnhancedToothDetailsDialog({
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string>('')
   const [showComparison, setShowComparison] = useState(false)
   const [selectedComparisonTreatment, setSelectedComparisonTreatment] = useState<string>('')
+  const [editingTreatment, setEditingTreatment] = useState<string | null>(null)
 
   const patient = patients.find(p => p.id === patientId)
   const toothInfo = toothNumber ? getToothInfo(toothNumber, isPrimaryTeeth) : null
@@ -227,6 +232,25 @@ export default function EnhancedToothDetailsDialog({
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Handle completed treatment updates (after audit trail modifications)
+  const handleTreatmentUpdated = async () => {
+    try {
+      if (toothNumber) {
+        await loadToothTreatmentsByTooth(patientId, toothNumber)
+        onTreatmentUpdate?.()
+        onSessionStatsUpdate?.()
+      }
+    } catch (error) {
+      console.error('Error reloading treatment data:', error)
+    }
+  }
+
+  // Handle editing completed treatment by setting it as the editing treatment
+  const handleEditCompletedTreatment = (treatmentId: string) => {
+    setEditingTreatment(treatmentId)
+    setActiveTab('treatments')
   }
 
   const handleReorderTreatments = async (treatmentIds: string[]) => {
@@ -525,15 +549,15 @@ export default function EnhancedToothDetailsDialog({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" dir="rtl">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="treatments" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               العلاجات النشطة
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
+            {/* <TabsTrigger value="completed" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               العلاجات المكتملة ({summary.completed})
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="images" className="flex items-center gap-2">
               <Camera className="w-4 h-4" />
               الصور ({(toothTreatmentImages || []).filter(img => img.tooth_number === toothNumber && img.patient_id === patientId).length})
@@ -546,13 +570,15 @@ export default function EnhancedToothDetailsDialog({
               patientId={patientId}
               toothNumber={toothNumber}
               toothName={toothInfo.arabicName}
-              treatments={currentToothTreatments.filter(t => t.treatment_status !== 'completed')}
+              treatments={currentToothTreatments}
               onAddTreatment={handleAddTreatment}
               onUpdateTreatment={handleUpdateTreatment}
               onDeleteTreatment={handleDeleteTreatment}
               onReorderTreatments={handleReorderTreatments}
               onSessionStatsUpdate={onSessionStatsUpdate}
               onTreatmentUpdate={onTreatmentUpdate}
+              editingTreatmentId={editingTreatment}
+              setEditingTreatmentId={setEditingTreatment}
             />
           </TabsContent>
 
@@ -591,54 +617,63 @@ export default function EnhancedToothDetailsDialog({
                             : "border-green-200 bg-green-50 hover:bg-green-100/50"
                         )}>
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={cn(
-                                    "w-4 h-4 rounded-full border",
-                                    isDarkMode ? "border-white/30" : "border-white/50"
-                                  )}
-                                  style={{ backgroundColor: treatment.treatment_color }}
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-center gap-1">
+                                <CompletedTreatmentActions
+                                  treatment={treatment}
+                                  isCompleted={true}
+                                  onEditClick={() => handleEditCompletedTreatment(treatment.id)}
                                 />
-                                <div>
-                                  <h4 className={cn(
-                                    "font-medium",
-                                    isDarkMode ? "text-green-200" : "text-green-800"
+                              </div>
+                              <div className="flex items-center gap-3 flex-1 justify-end">
+                                <div className="text-right">
+                                  <Badge variant="secondary" className={cn(
+                                    "transition-colors mb-2",
+                                    isDarkMode
+                                      ? "bg-green-900/50 text-green-200 border-green-700/50"
+                                      : "bg-green-100 text-green-800 border-green-200"
                                   )}>
-                                    {getTreatmentByValue(treatment.treatment_type)?.label || treatment.treatment_type}
-                                  </h4>
-                                  <p className={cn(
-                                    "text-sm",
-                                    isDarkMode ? "text-green-300" : "text-green-600"
-                                  )}>
-                                    الأولوية: {treatment.priority}
-                                  </p>
+                                    <CheckCircle className="w-3 h-3 ml-1" />
+                                    مكتمل
+                                  </Badge>
+                                  {treatment.completion_date && (
+                                    <p className={cn(
+                                      "text-xs",
+                                      isDarkMode ? "text-green-300" : "text-green-600"
+                                    )}>
+                                      {(() => {
+                                        const date = new Date(treatment.completion_date)
+                                        const day = date.getDate().toString().padStart(2, '0')
+                                        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+                                        const year = date.getFullYear()
+                                        return `${day}/${month}/${year}`
+                                      })()}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <Badge variant="secondary" className={cn(
-                                  "transition-colors",
-                                  isDarkMode
-                                    ? "bg-green-900/50 text-green-200 border-green-700/50"
-                                    : "bg-green-100 text-green-800 border-green-200"
-                                )}>
-                                  <CheckCircle className="w-3 h-3 ml-1" />
-                                  مكتمل
-                                </Badge>
-                                {treatment.completion_date && (
-                                  <p className={cn(
-                                    "text-xs mt-1",
-                                    isDarkMode ? "text-green-300" : "text-green-600"
-                                  )}>
-                                    تاريخ الإكمال: {(() => {
-                                      const date = new Date(treatment.completion_date)
-                                      const day = date.getDate().toString().padStart(2, '0')
-                                      const month = (date.getMonth() + 1).toString().padStart(2, '0')
-                                      const year = date.getFullYear()
-                                      return `${day}/${month}/${year}`
-                                    })()}
-                                  </p>
+                            </div>
+                            <div className="flex items-center gap-3 mt-3 ml-10">
+                              <div
+                                className={cn(
+                                  "w-4 h-4 rounded-full border",
+                                  isDarkMode ? "border-white/30" : "border-white/50"
                                 )}
+                                style={{ backgroundColor: treatment.treatment_color }}
+                              />
+                              <div>
+                                <h4 className={cn(
+                                  "font-medium",
+                                  isDarkMode ? "text-green-200" : "text-green-800"
+                                )}>
+                                  {getTreatmentByValue(treatment.treatment_type)?.label || treatment.treatment_type}
+                                </h4>
+                                <p className={cn(
+                                  "text-sm",
+                                  isDarkMode ? "text-green-300" : "text-green-600"
+                                )}>
+                                  الأولوية: {treatment.priority}
+                                </p>
                               </div>
                             </div>
                             {treatment.notes && (
