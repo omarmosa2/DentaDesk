@@ -49,16 +49,16 @@ import { usePaymentStore } from "@/store/paymentStore";
 import { useDentalTreatmentStore } from "@/store/dentalTreatmentStore";
 import { useToast } from "@/hooks/use-toast";
 const AddAppointmentDialog = lazy(
-  () => import("@/components/AddAppointmentDialog")
+  () => import("@/components/AddAppointmentDialog"),
 );
 const AddPaymentDialog = lazy(
-  () => import("@/components/payments/AddPaymentDialog")
+  () => import("@/components/payments/AddPaymentDialog"),
 );
 const AddPrescriptionDialog = lazy(
-  () => import("@/components/medications/AddPrescriptionDialog")
+  () => import("@/components/medications/AddPrescriptionDialog"),
 );
 const ComprehensivePendingInvoiceDialog = lazy(
-  () => import("@/components/payments/ComprehensivePendingInvoiceDialog")
+  () => import("@/components/payments/ComprehensivePendingInvoiceDialog"),
 );
 import {
   TREATMENT_STATUS_OPTIONS,
@@ -88,11 +88,11 @@ function PatientDetailsModalComponent({
 }: PatientDetailsModalProps) {
   const [activeTab, setActiveTab] = useState("info");
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>(
-    []
+    [],
   );
   const [patientPayments, setPatientPayments] = useState<Payment[]>([]);
   const [patientTreatments, setPatientTreatments] = useState<ToothTreatment[]>(
-    []
+    [],
   );
   const [patientPrescriptions, setPatientPrescriptions] = useState<
     Prescription[]
@@ -301,7 +301,7 @@ function PatientDetailsModalComponent({
       // Filter appointments for this patient
       setIsLoadingAppointments(true);
       const filteredAppointments = appointments.filter(
-        (apt) => apt.patient_id === patient.id
+        (apt) => apt.patient_id === patient.id,
       );
       setPatientAppointments(filteredAppointments);
       setIsLoadingAppointments(false);
@@ -309,7 +309,7 @@ function PatientDetailsModalComponent({
       // Filter payments for this patient
       setIsLoadingPayments(true);
       const filteredPayments = payments.filter(
-        (payment) => payment.patient_id === patient.id
+        (payment) => payment.patient_id === patient.id,
       );
       setPatientPayments(filteredPayments);
       setIsLoadingPayments(false);
@@ -322,7 +322,7 @@ function PatientDetailsModalComponent({
           const { toothTreatments: freshTreatments } =
             useDentalTreatmentStore.getState();
           const filteredTreatments = freshTreatments.filter(
-            (treatment) => treatment.patient_id === patient.id
+            (treatment) => treatment.patient_id === patient.id,
           );
           setPatientTreatments(filteredTreatments);
           setIsLoadingTreatments(false);
@@ -393,7 +393,7 @@ function PatientDetailsModalComponent({
 
   const getTreatmentStatusBadge = (status: string) => {
     const statusOption = TREATMENT_STATUS_OPTIONS.find(
-      (option) => option.value === status
+      (option) => option.value === status,
     );
     if (statusOption) {
       const variantMap = {
@@ -430,7 +430,7 @@ function PatientDetailsModalComponent({
           selectedPatientId: patient.id,
           patientName: patient.full_name,
           openAddDialog: true,
-        })
+        }),
       );
     } else {
       // Fallback to opening dialog within current modal
@@ -452,7 +452,7 @@ function PatientDetailsModalComponent({
           selectedPatientId: patient.id,
           patientName: patient.full_name,
           showAddTreatmentGuidance: true,
-        })
+        }),
       );
     }
   };
@@ -817,7 +817,7 @@ function PatientDetailsModalComponent({
                         <tbody className="bg-background divide-y divide-border">
                           {patientTreatments.map((treatment, index) => {
                             const status = getTreatmentStatusBadge(
-                              treatment.treatment_status
+                              treatment.treatment_status,
                             );
                             return (
                               <tr
@@ -835,7 +835,7 @@ function PatientDetailsModalComponent({
                                 </td>
                                 <td className="px-4 py-3 text-sm text-foreground">
                                   {getTreatmentNameInArabic(
-                                    treatment.treatment_type
+                                    treatment.treatment_type,
                                   ) || "-"}
                                 </td>
                                 <td className="px-4 py-3 text-sm font-medium">
@@ -894,7 +894,7 @@ function PatientDetailsModalComponent({
                                   </div>
                                 )}
                               </div>
-                            )
+                            ),
                         )}
                       </div>
                     )}
@@ -1003,7 +1003,7 @@ function PatientDetailsModalComponent({
                                 </td>
                                 <td className="px-4 py-3 text-sm text-muted-foreground">
                                   {new Date(
-                                    appointment.start_time
+                                    appointment.start_time,
                                   ).toLocaleTimeString("ar-SA", {
                                     hour: "2-digit",
                                     minute: "2-digit",
@@ -1052,7 +1052,7 @@ function PatientDetailsModalComponent({
                                   <span className="text-xs text-muted-foreground">
                                     {formatDate(appointment.start_time)} -{" "}
                                     {new Date(
-                                      appointment.start_time
+                                      appointment.start_time,
                                     ).toLocaleTimeString("ar-SA", {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -1068,7 +1068,7 @@ function PatientDetailsModalComponent({
                                   </span>
                                 </div>
                               </div>
-                            )
+                            ),
                         )}
                       </div>
                     )}
@@ -1130,60 +1130,60 @@ function PatientDetailsModalComponent({
                     const summary = calculatePatientPaymentSummary(
                       patient.id,
                       payments,
-                      appointments
+                      appointments,
                     );
 
                     // حساب إضافي للمدفوعات المرتبطة بالعلاجات
                     const treatmentPayments = patientPayments.filter(
-                      (p) => p.tooth_treatment_id
+                      (p) => p.tooth_treatment_id,
                     );
                     const appointmentPayments = patientPayments.filter(
-                      (p) => p.appointment_id && !p.tooth_treatment_id
+                      (p) => p.appointment_id && !p.tooth_treatment_id,
                     );
                     const generalPayments = patientPayments.filter(
-                      (p) => !p.appointment_id && !p.tooth_treatment_id
+                      (p) => !p.appointment_id && !p.tooth_treatment_id,
                     );
 
                     // حساب المبالغ للعلاجات
                     const treatmentTotalDue = treatmentPayments.reduce(
                       (sum, p) => sum + (p.treatment_total_cost || 0),
-                      0
+                      0,
                     );
                     const treatmentTotalPaid = treatmentPayments.reduce(
                       (sum, p) => sum + p.amount,
-                      0
+                      0,
                     );
                     const treatmentRemaining = treatmentPayments.reduce(
                       (sum, p) => sum + (p.treatment_remaining_balance || 0),
-                      0
+                      0,
                     );
 
                     // حساب المبالغ للمواعيد
                     const appointmentTotalDue = appointmentPayments.reduce(
                       (sum, p) => sum + (p.appointment_total_cost || 0),
-                      0
+                      0,
                     );
                     const appointmentTotalPaid = appointmentPayments.reduce(
                       (sum, p) => sum + p.amount,
-                      0
+                      0,
                     );
                     const appointmentRemaining = appointmentPayments.reduce(
                       (sum, p) => sum + (p.appointment_remaining_balance || 0),
-                      0
+                      0,
                     );
 
                     // حساب المبالغ العامة
                     const generalTotalDue = generalPayments.reduce(
                       (sum, p) => sum + (p.total_amount_due || 0),
-                      0
+                      0,
                     );
                     const generalTotalPaid = generalPayments.reduce(
                       (sum, p) => sum + p.amount,
-                      0
+                      0,
                     );
                     const generalRemaining = generalPayments.reduce(
                       (sum, p) => sum + (p.remaining_balance || 0),
-                      0
+                      0,
                     );
 
                     // الإجماليات النهائية
@@ -1201,19 +1201,19 @@ function PatientDetailsModalComponent({
                     // حساب إجمالي الخصومات
                     const totalDiscounts = patientPayments.reduce(
                       (sum, p) => sum + (p.discount_amount || 0),
-                      0
+                      0,
                     );
                     const netRevenue = totalAmountPaid - totalDiscounts;
 
                     // إحصائيات إضافية
                     const pendingPayments = patientPayments.filter(
-                      (p) => p.status === "pending"
+                      (p) => p.status === "pending",
                     );
                     const partialPayments = patientPayments.filter(
-                      (p) => p.status === "partial"
+                      (p) => p.status === "partial",
                     );
                     const completedPayments = patientPayments.filter(
-                      (p) => p.status === "completed"
+                      (p) => p.status === "completed",
                     );
 
                     return (
@@ -1370,9 +1370,12 @@ function PatientDetailsModalComponent({
                   })()}
 
                   {/* Payment List as Table */}
-                  <Card className="card-rtl">
-                    <CardHeader className="card-header">
-                      <CardTitle className="flex items-center gap-2 text-foreground text-right">
+                  <Card  className="card-rtl">
+                    <CardHeader  className="card-header">
+                      <CardTitle
+                        dir="rtl"
+                        className="flex flex-row-reverse items-center gap-2 text-foreground w-full justify-start"
+                      >
                         <DollarSign className="w-5 h-5" />
                         تفاصيل المدفوعات الشاملة
                       </CardTitle>
@@ -1417,10 +1420,10 @@ function PatientDetailsModalComponent({
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="bg-background divide-y divide-border">
+                          <tbody className="bg-background divide-y divide-border ">
                             {patientPayments.map((payment, index) => {
                               const status = getPaymentStatusBadge(
-                                payment.status
+                                payment.status,
                               );
 
                               // تحديد نوع الدفعة والتفاصيل
@@ -1456,7 +1459,7 @@ function PatientDetailsModalComponent({
                                 const treatmentName = payment.tooth_treatment
                                   ?.treatment_type
                                   ? getTreatmentNameInArabic(
-                                      payment.tooth_treatment.treatment_type
+                                      payment.tooth_treatment.treatment_type,
                                     )
                                   : "علاج سن";
 
@@ -1495,24 +1498,24 @@ function PatientDetailsModalComponent({
                                   key={payment.id}
                                   className="hover:bg-muted/50 transition-colors"
                                 >
-                                  <td className="px-4 py-3 text-sm text-foreground">
+                                  <td className="py-3 text-sm text-foreground">
                                     {index + 1}
                                   </td>
-                                  <td className="px-4 py-3 text-sm">
+                                  <td className="py-3 text-sm">
                                     <Badge
                                       variant={
                                         paymentType === "علاج"
                                           ? "default"
                                           : paymentType === "موعد"
-                                          ? "secondary"
-                                          : "outline"
+                                            ? "secondary"
+                                            : "outline"
                                       }
                                       className="text-sm"
                                     >
                                       {paymentType}
                                     </Badge>
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-foreground max-w-64">
+                                  <td className="py-3 text-sm text-foreground max-w-64">
                                     <div
                                       className="truncate"
                                       title={paymentDetails}
@@ -1526,19 +1529,19 @@ function PatientDetailsModalComponent({
                                       </div>
                                     )}
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-foreground">
+                                  <td className=" py-3 text-sm text-foreground">
                                     {formatDate(payment.payment_date)}
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">
+                                  <td className=" py-3 text-sm font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(payment.amount)}
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-center">
+                                  <td className=" py-3 text-sm text-center">
                                     {payment.discount_amount &&
                                     payment.discount_amount > 0 ? (
                                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                                         -
                                         {formatCurrency(
-                                          payment.discount_amount
+                                          payment.discount_amount,
                                         )}
                                       </span>
                                     ) : (
@@ -1547,12 +1550,12 @@ function PatientDetailsModalComponent({
                                       </span>
                                     )}
                                   </td>
-                                  <td className="px-4 py-3 text-sm text-foreground">
+                                  <td className="py-3 text-sm text-foreground">
                                     {totalDue > 0
                                       ? formatCurrency(totalDue)
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-sm font-medium">
+                                  <td className="py-3 text-sm font-medium">
                                     {remaining !== undefined ? (
                                       <span
                                         className={
@@ -1571,11 +1574,11 @@ function PatientDetailsModalComponent({
                                     {payment.payment_method === "cash"
                                       ? "نقداً"
                                       : payment.payment_method ===
-                                        "bank_transfer"
-                                      ? "تحويل بنكي"
-                                      : payment.payment_method}
+                                          "bank_transfer"
+                                        ? "تحويل بنكي"
+                                        : payment.payment_method}
                                   </td>
-                                  <td className="px-4 py-3 text-sm">
+                                  <td className="px-1 py-3 text-sm">
                                     <Badge
                                       variant={status.variant}
                                       className="text-sm"
@@ -1592,7 +1595,7 @@ function PatientDetailsModalComponent({
 
                       {/* تفاصيل إضافية للمدفوعات */}
                       {patientPayments.some(
-                        (p) => p.description || p.receipt_number
+                        (p) => p.description || p.receipt_number,
                       ) && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium text-foreground">
@@ -1637,7 +1640,7 @@ function PatientDetailsModalComponent({
                                     </div>
                                   )}
                                 </div>
-                              )
+                              ),
                           )}
                         </div>
                       )}
@@ -1769,7 +1772,7 @@ function PatientDetailsModalComponent({
               await createAppointment(appointmentData);
               setShowAddAppointmentDialog(false);
               const updatedAppointments = appointments.filter(
-                (apt) => apt.patient_id === patient.id
+                (apt) => apt.patient_id === patient.id,
               );
               setPatientAppointments(updatedAppointments);
               toast({

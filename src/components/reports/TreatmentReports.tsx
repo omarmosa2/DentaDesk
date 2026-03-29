@@ -12,6 +12,14 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import {
   BarChart,
   Bar,
   XAxis,
@@ -56,7 +64,8 @@ import {
   PieChart as PieChartIcon,
   Download,
   RefreshCw,
-  Stethoscope
+  Stethoscope,
+  FileText
 } from 'lucide-react'
 
 // Color palette for charts
@@ -102,6 +111,9 @@ function TreatmentReportsComponent() {
   const { patients, loadPatients } = usePatientStore()
   const { currency, settings } = useSettingsStore()
   const { isDarkMode } = useTheme()
+  
+  // State for treatment type filter
+  const [selectedTreatmentType, setSelectedTreatmentType] = useState<string>('all')
 
   // Helper function to safely convert values to numbers
   const safeNumber = (value: any): number => {
@@ -145,7 +157,7 @@ function TreatmentReportsComponent() {
   })
 
   // Use real-time reports hook for automatic updates
-  useRealTimeReportsByType('treatments')
+  useRealTimeReportsByType('treatments' as any)
 
   useEffect(() => {
     generateReport('treatments')
@@ -153,6 +165,36 @@ function TreatmentReportsComponent() {
     loadPatients()
     refreshTreatmentNames() // تحديث أسماء العلاجات المخصصة
   }, [generateReport, loadToothTreatments, loadPatients, refreshTreatmentNames])
+
+  // Get all unique treatment types
+  const uniqueTreatmentTypes = useMemo(() => {
+    if (!treatmentStats.filteredData || treatmentStats.filteredData.length === 0) {
+      return []
+    }
+    const types = new Set(treatmentStats.filteredData.map(t => t.treatment_type).filter(Boolean))
+    return Array.from(types).sort()
+  }, [treatmentStats.filteredData])
+
+  // Filter treatments by selected type
+  const filteredByType = useMemo(() => {
+    if (selectedTreatmentType === 'all') {
+      return treatmentStats.filteredData || []
+    }
+    return (treatmentStats.filteredData || []).filter(t => t.treatment_type === selectedTreatmentType)
+  }, [treatmentStats.filteredData, selectedTreatmentType])
+
+  // Add patient names to filtered treatments
+  const treatmentsWithPatientNames = useMemo(() => {
+    const patientMap: Record<string, string> = {}
+    patients.forEach(patient => {
+      patientMap[patient.id] = patient.full_name || `مريض ${patient.id}`
+    })
+    
+    return filteredByType.map(treatment => ({
+      ...treatment,
+      patient_name: patientMap[treatment.patient_id] || `مريض ${treatment.patient_id}`
+    }))
+  }, [filteredByType, patients])
 
   // Calculate filtered statistics
   const filteredTreatmentStats = useMemo(() => {
@@ -179,10 +221,10 @@ function TreatmentReportsComponent() {
 
     // Calculate basic counts
     const totalTreatments = filteredData.length
-    const completedTreatments = filteredData.filter(t => t.status === 'completed').length
-    const plannedTreatments = filteredData.filter(t => t.status === 'planned').length
-    const inProgressTreatments = filteredData.filter(t => t.status === 'in-progress').length
-    const cancelledTreatments = filteredData.filter(t => t.status === 'cancelled').length
+    const completedTreatments = filteredData.filter(t => t.treatment_status === 'completed').length
+    const plannedTreatments = filteredData.filter(t => t.treatment_status === 'planned').length
+    const inProgressTreatments = filteredData.filter(t => t.treatment_status === 'in_progress').length
+    const cancelledTreatments = filteredData.filter(t => t.treatment_status === 'cancelled').length
 
     // Calculate financial stats
     const totalRevenue = filteredData.reduce((sum, t) => sum + (t.cost || 0), 0)
@@ -191,7 +233,7 @@ function TreatmentReportsComponent() {
 
     // Group by status
     const statusGroups = filteredData.reduce((acc, treatment) => {
-      const status = getStatusLabelInArabic(treatment.status || 'غير محدد')
+      const status = getStatusLabelInArabic(treatment.treatment_status || 'غير محدد')
       acc[status] = (acc[status] || 0) + 1
       return acc
     }, {} as Record<string, number>)
@@ -247,12 +289,10 @@ function TreatmentReportsComponent() {
 
     // Pending and overdue treatments
     const pendingTreatments = filteredData.filter(t =>
-      t.status === 'planned' || t.status === 'in-progress'
+      t.treatment_status === 'planned' || t.treatment_status === 'in_progress'
     ).map(treatment => ({
       ...treatment,
-      patient_name: patients.find(p => p.id === treatment.patient_id)?.full_name ||
-                   `${patients.find(p => p.id === treatment.patient_id)?.first_name || ''} ${patients.find(p => p.id === treatment.patient_id)?.last_name || ''}`.trim() ||
-                   `مريض ${treatment.patient_id}`
+      patient_name: patients.find(p => p.id === treatment.patient_id)?.full_name || `مريض ${treatment.patient_id}`
     }))
 
     const thirtyDaysAgo = new Date()
@@ -305,7 +345,7 @@ function TreatmentReportsComponent() {
 
       const patientMap: Record<string, string> = {}
       patients.forEach(patient => {
-        patientMap[patient.id] = patient.full_name || `${patient.first_name || ''} ${patient.last_name || ''}`.trim()
+        patientMap[patient.id] = patient.full_name || `مريض ${patient.id}`
       })
 
       const dataWithPatientNames = dataToExport.map(treatment => ({
@@ -332,7 +372,7 @@ function TreatmentReportsComponent() {
 
       const patientMap: Record<string, string> = {}
       patients.forEach(patient => {
-        patientMap[patient.id] = patient.full_name || `${patient.first_name || ''} ${patient.last_name || ''}`.trim()
+        patientMap[patient.id] = patient.full_name || `مريض ${patient.id}`
       })
 
       const dataWithPatientNames = dataToExport.map(treatment => ({
@@ -425,25 +465,107 @@ function TreatmentReportsComponent() {
         </div>
       </div>
 
-      {/* Time Filter */}
-      <TimeFilter
-        value={treatmentStats.timeFilter}
-        onChange={treatmentStats.handleFilterChange}
-        onClear={treatmentStats.resetFilter}
-        title="فلترة العلاجات حسب التاريخ"
-        defaultOpen={false}
-      />
+       {/* Time Filter */}
+       <TimeFilter
+         value={treatmentStats.timeFilter}
+         onChange={treatmentStats.handleFilterChange}
+         onClear={treatmentStats.resetFilter}
+         title="فلترة العلاجات حسب التاريخ"
+         defaultOpen={false}
+       />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="إجمالي العلاجات"
-          value={safeNumber(filteredTreatmentStats.totalTreatments).toFixed(0)}
-          icon={Activity}
-          color="blue"
-          description="العدد الكلي للعلاجات"
-          trend={treatmentStats.trend}
-        />
+        {/* Treatment Type Filter */}
+        <div className="mb-4">
+          <Label htmlFor="treatment-type-filter">فلتر نوع العلاج</Label>
+          <Select value={selectedTreatmentType} onValueChange={setSelectedTreatmentType}>
+            <SelectTrigger id="treatment-type-filter">
+              <SelectValue placeholder="جميع أنواع العلاجات" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">جميع أنواع العلاجات</SelectItem>
+              {uniqueTreatmentTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {getTreatmentNameInArabic(type)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Basic Treatments Table (Patient, Type, Date) */}
+        <Card className="bg-muted/40">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              جدول العلاجات
+            </CardTitle>
+            <CardDescription>
+              عرض مباشر لاسم المريض، نوع العلاج، وتاريخ العلاج مع إمكانية التصفية حسب نوع العلاج
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                النوع المحدد: {selectedTreatmentType === 'all' ? 'جميع الأنواع' : getTreatmentNameInArabic(selectedTreatmentType)}
+              </span>
+              <span>
+                عدد السجلات: <span className="font-bold text-foreground">{treatmentsWithPatientNames.length}</span>
+              </span>
+            </div>
+            <div className="border rounded-lg overflow-hidden">
+              <div className="max-h-[360px] overflow-y-auto">
+                {treatmentsWithPatientNames.length === 0 ? (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <div className="text-center">
+                      <FileText className="w-7 h-7 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">
+                        {selectedTreatmentType === 'all'
+                          ? 'لا توجد علاجات متاحة'
+                          : `لا توجد علاجات من نوع "${getTreatmentNameInArabic(selectedTreatmentType)}"`}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <Table dir="rtl">
+                    <TableHeader className="sticky top-0 bg-muted/50">
+                      <TableRow>
+                        <TableHead className="text-right">اسم المريض</TableHead>
+                        <TableHead className="text-right">نوع العلاج</TableHead>
+                        <TableHead className="text-right">تاريخ العلاج</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {treatmentsWithPatientNames.map((treatment) => (
+                        <TableRow key={treatment.id} className="hover:bg-muted/40">
+                          <TableCell className="text-right font-medium">
+                            {safeString(treatment.patient_name)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {getTreatmentNameInArabic(treatment.treatment_type)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {treatment.created_at ? formatDate(treatment.created_at) : 'غير محدد'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+       {/* Stats Cards */}
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <StatCard
+           title="إجمالي العلاجات"
+           value={safeNumber(filteredTreatmentStats.totalTreatments).toFixed(0)}
+           icon={Activity}
+           color="blue"
+           description="العدد الكلي للعلاجات"
+           trend={treatmentStats.trend ? { value: safeNumber((treatmentStats.trend as any).changePercent ?? (treatmentStats.trend as any).value ?? 0), isPositive: Boolean((treatmentStats.trend as any).isPositive) } : undefined}
+         />
         <StatCard
           title="العلاجات المكتملة"
           value={safeNumber(filteredTreatmentStats.completedTreatments).toFixed(0)}
@@ -469,11 +591,12 @@ function TreatmentReportsComponent() {
 
       {/* Charts and Analysis */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
           <TabsTrigger value="analysis">التحليل</TabsTrigger>
           <TabsTrigger value="performance">الأداء</TabsTrigger>
           <TabsTrigger value="details">التفاصيل</TabsTrigger>
+          <TabsTrigger value="table">الجدول</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -861,6 +984,143 @@ function TreatmentReportsComponent() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Treatments Table Tab */}
+        <TabsContent value="table" className="space-y-6" dir="rtl">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Table className="h-5 w-5" />
+                جدول العلاجات
+              </CardTitle>
+              <CardDescription>
+                عرض جميع العلاجات مع معلومات المريض والتاريخ والتكلفة
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Filter Section */}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="treatment-type-filter">فلترة حسب نوع العلاج</Label>
+                  <Select value={selectedTreatmentType} onValueChange={setSelectedTreatmentType}>
+                    <SelectTrigger id="treatment-type-filter">
+                      <SelectValue placeholder="اختر نوع العلاج" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع الأنواع ({treatmentStats.filteredData?.length || 0})</SelectItem>
+                      {uniqueTreatmentTypes.map((type) => {
+                        const count = (treatmentStats.filteredData || []).filter(t => t.treatment_type === type).length
+                        return (
+                          <SelectItem key={type} value={type}>
+                            {getTreatmentNameInArabic(type)} ({count})
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  عدد السجلات: <span className="font-bold text-foreground">{treatmentsWithPatientNames.length}</span>
+                </div>
+              </div>
+
+              {/* Treatments Table */}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-[600px] overflow-y-auto">
+                  {treatmentsWithPatientNames.length === 0 ? (
+                    <div className="flex items-center justify-center h-40 text-muted-foreground">
+                      <div className="text-center">
+                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">
+                          {selectedTreatmentType === 'all' 
+                            ? 'لا توجد علاجات متاحة' 
+                            : `لا توجد علاجات من نوع "${getTreatmentNameInArabic(selectedTreatmentType)}"`}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <Table dir="rtl">
+                      <TableHeader className="sticky top-0 bg-muted/50">
+                        <TableRow>
+                          <TableHead className="text-right">اسم المريض</TableHead>
+                          <TableHead className="text-right">نوع العلاج</TableHead>
+                          <TableHead className="text-right">الفئة</TableHead>
+                          <TableHead className="text-right">تاريخ العلاج</TableHead>
+                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">التكلفة</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {treatmentsWithPatientNames.map((treatment) => (
+                          <TableRow key={treatment.id} className="hover:bg-muted/50">
+                            <TableCell className="text-right font-medium">
+                              {safeString(treatment.patient_name)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {getTreatmentNameInArabic(treatment.treatment_type)}
+                            </TableCell>
+                            <TableCell className="text-right text-sm text-muted-foreground">
+                              {getCategoryNameInArabic(treatment.treatment_category || 'غير محدد')}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {treatment.created_at ? formatDate(treatment.created_at) : 'غير محدد'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                             <Badge variant={
+                               treatment.treatment_status === 'completed' ? 'default' :
+                               treatment.treatment_status === 'in_progress' ? 'secondary' :
+                               treatment.treatment_status === 'planned' ? 'outline' :
+                               'destructive'
+                             }>
+                               {getStatusLabelInArabic(treatment.treatment_status || 'غير محدد')}
+                             </Badge>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold">
+                              <CurrencyDisplay amount={treatment.cost || 0} currency={currency} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </div>
+
+              {/* Summary Stats */}
+              {treatmentsWithPatientNames.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">إجمالي التكلفة</p>
+                    <p className="text-lg font-bold">
+                      <CurrencyDisplay 
+                        amount={treatmentsWithPatientNames.reduce((sum, t) => sum + (t.cost || 0), 0)} 
+                        currency={currency} 
+                      />
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">عدد مكتمل</p>
+                     <p className="text-lg font-bold text-green-600">
+                       {treatmentsWithPatientNames.filter(t => t.treatment_status === 'completed').length}
+                     </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">عدد جاري</p>
+                     <p className="text-lg font-bold text-blue-600">
+                       {treatmentsWithPatientNames.filter(t => t.treatment_status === 'in_progress').length}
+                     </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">عدد مخطط</p>
+                     <p className="text-lg font-bold text-yellow-600">
+                       {treatmentsWithPatientNames.filter(t => t.treatment_status === 'planned').length}
+                     </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
