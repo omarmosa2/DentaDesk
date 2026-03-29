@@ -54,6 +54,18 @@ async function initializeClient() {
         }
     }
     try {
+        // Resolve latest WA version (Baileys 7.x breaking change requires matching version)
+        let waVersion = [2, 2414, 80];
+        try {
+            const fetched = await (0, baileys_1.fetchLatestBaileysVersion)();
+            if (Array.isArray(fetched.version)) {
+                waVersion = fetched.version;
+                console.log('🔄 Resolved latest WA version from Baileys:', waVersion.join('.'));
+            }
+        }
+        catch (versionError) {
+            console.warn('⚠️ Failed to fetch latest WA version, using fallback', waVersion, versionError);
+        }
         // Create auth state
         const { state, saveCreds } = await (0, baileys_1.useMultiFileAuthState)(sessionPath);
         // Create Baileys socket
@@ -66,6 +78,7 @@ async function initializeClient() {
             logger: (0, pino_1.pino)({ level: 'silent' }),
             browser: baileys_1.Browsers.macOS('Desktop'),
             generateHighQualityLinkPreview: true,
+            version: waVersion,
         });
         // Handle QR code generation
         sock.ev.on('connection.update', (update) => {
@@ -453,19 +466,25 @@ async function generateNewQR() {
         console.log('🚀 Creating fresh WhatsApp client for QR generation...');
         await initializeClient();
 
-        // Wait for QR code to be generated
+        // Wait for QR code to be generated with extended attempts and slower polling
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 15;
 
         while (attempts < maxAttempts) {
             attempts++;
             console.log(`⏳ Waiting for QR code (attempt ${attempts}/${maxAttempts})...`);
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
             if (lastQr) {
                 console.log('✅ QR code generated successfully after', attempts, 'attempts');
                 return { success: true };
+            }
+
+            // If socket vanished, break early to let caller see the failure
+            if (!sock) {
+                console.warn('⚠️ Socket unavailable during QR wait; aborting.');
+                break;
             }
         }
 

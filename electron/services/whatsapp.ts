@@ -3,7 +3,8 @@ import {
   DisconnectReason,
   useMultiFileAuthState,
   makeCacheableSignalKeyStore,
-  Browsers
+  Browsers,
+  fetchLatestBaileysVersion
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import { app, BrowserWindow } from 'electron';
@@ -62,6 +63,18 @@ export async function initializeClient(): Promise<void> {
     // Create auth state
     const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
+    // Resolve the latest WA version to avoid handshake rejection after Baileys 7.x breaking change
+    let waVersion: [number, number, number] = [2, 2414, 80];
+    try {
+      const fetched = await fetchLatestBaileysVersion();
+      if (Array.isArray(fetched.version)) {
+        waVersion = fetched.version as [number, number, number];
+        console.log('🔄 Resolved latest WA version from Baileys:', waVersion.join('.'));
+      }
+    } catch (versionError) {
+      console.warn('⚠️ Failed to fetch latest WA version, using fallback', waVersion, versionError);
+    }
+
     // Create Baileys socket with enhanced configuration for latest WhatsApp compatibility
     sock = makeWASocket({
       auth: {
@@ -76,8 +89,8 @@ export async function initializeClient(): Promise<void> {
       // Enhanced connection configuration for latest WhatsApp compatibility
       connectTimeoutMs: 45000,
       qrTimeout: 60000,
-      // Updated version for latest WhatsApp compatibility (2.24.14.80)
-      version: [2, 2414, 80],
+      // Dynamically resolved version for latest WhatsApp compatibility
+      version: waVersion,
       // Improve connection reliability with better retry logic
       retryRequestDelayMs: 500,
       maxMsgRetryCount: 10,
