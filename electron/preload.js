@@ -367,6 +367,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getStatus: () => ipcRenderer.invoke('whatsapp-reminders:get-status'),
     logoutOtherDevices: () => ipcRenderer.invoke('whatsapp-reminders:logout-other-devices'),
     generateNewQR: () => ipcRenderer.invoke('whatsapp-reminders:generate-new-qr'),
+    generatePairingCode: (phoneNumber) => ipcRenderer.invoke('whatsapp-reminders:generate-pairing-code', phoneNumber),
     runDiagnostic: () => ipcRenderer.invoke('whatsapp-reminders:run-diagnostic'),
     runSchedulerOnce: () => ipcRenderer.invoke('whatsapp-reminders:run-scheduler-once')
   }

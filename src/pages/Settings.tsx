@@ -66,6 +66,9 @@ export default function Settings() {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false)
   const [confirmDeleteQROpen, setConfirmDeleteQROpen] = useState(false)
   const [qrSvg, setQrSvg] = useState<string>('')
+  const [pairingPhoneNumber, setPairingPhoneNumber] = useState('')
+  const [pairingCode, setPairingCode] = useState('')
+  const [isGeneratingPairingCode, setIsGeneratingPairingCode] = useState(false)
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   // WhatsApp Session Status State
@@ -574,6 +577,37 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }))
     }, 3000)
+  }
+
+  const handleGeneratePairingCode = async () => {
+    const normalizedPhoneNumber = pairingPhoneNumber.replace(/\D/g, '')
+
+    if (normalizedPhoneNumber.length < 8 || normalizedPhoneNumber.length > 15) {
+      showNotification('أدخل رقم واتساب مع رمز الدولة، أرقام فقط مثل 9639xxxxxxxx', 'error')
+      return
+    }
+
+    try {
+      setIsGeneratingPairingCode(true)
+      setPairingCode('')
+
+      // @ts-ignore
+      const result = await window.electronAPI?.whatsappReminders?.generatePairingCode?.(normalizedPhoneNumber)
+
+      if (result?.success && result.pairingCode) {
+        setPairingPhoneNumber(result.phoneNumber || normalizedPhoneNumber)
+        setPairingCode(result.pairingCode)
+        showNotification('تم توليد كود الربط بنجاح', 'success')
+      } else {
+        showNotification(result?.error || 'فشل في توليد كود الربط', 'error')
+        console.error('Pairing code generation failed:', result)
+      }
+    } catch (error) {
+      console.error('Error generating pairing code:', error)
+      showNotification(`تعذر توليد كود الربط: ${(error as any)?.message || 'خطأ غير معروف'}`, 'error')
+    } finally {
+      setIsGeneratingPairingCode(false)
+    }
   }
 
   // Save WhatsApp settings
@@ -1357,6 +1391,7 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
                         onClick={async () => {
                           try {
                             setQrData('')
+                            setPairingCode('')
                             setShowQRModal(true)
 
                             // Use the IPC handler to generate new QR
@@ -1392,6 +1427,12 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
 
                               if (generateResult?.success) {
                                 showNotification('تم بدء عملية توليد رمز QR جديد', 'info')
+
+                                if (generateResult.qr && generateResult.qr.trim() !== '') {
+                                  setQrData(generateResult.qr)
+                                  showNotification('تم توليد رمز QR بنجاح!', 'success')
+                                  return
+                                }
 
                                 // Check for QR after generation with multiple attempts
                                 let attempts = 0
@@ -2059,7 +2100,7 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
       {showQRModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQRModal(false)} />
-          <div className="relative bg-card/95 border border-border rounded-2xl shadow-2xl max-w-2xl w-full mx-4" dir="rtl">
+          <div className="relative bg-card/95 border border-border rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" dir="rtl">
             <div className="p-6 sm:p-8 space-y-5">
               <div className="flex items-start justify-between">
                 <div>
@@ -2130,12 +2171,50 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
                 <li>إذا لم يتعرف واتساب على الرمز، اضبط سطوع الشاشة وتجنب الانعكاسات.</li>
                 <li>إن لم يظهر الرمز خلال ثوانٍ، اضغط إعادة توليد.</li>
               </ul>
+              <div className="border border-border rounded-xl p-4 space-y-3 bg-muted/30">
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-1">الربط بكود واتساب</label>
+                  <p className="text-xs text-muted-foreground">استخدم هذا الخيار إذا لم يظهر QR. أدخل الرقم مع رمز الدولة بدون + أو فراغات.</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    value={pairingPhoneNumber}
+                    onChange={(event) => setPairingPhoneNumber(event.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="9639xxxxxxxx"
+                    inputMode="numeric"
+                    dir="ltr"
+                    className="flex-1 px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                  <button
+                    onClick={handleGeneratePairingCode}
+                    disabled={isGeneratingPairingCode}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg shadow-sm hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 ease-in-out interactive-card hover:scale-105 active:scale-95"
+                  >
+                    {isGeneratingPairingCode ? 'جاري التوليد...' : 'توليد كود الربط'}
+                  </button>
+                </div>
+                {pairingCode && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">اكتب هذا الكود في واتساب ضمن الأجهزة المرتبطة</div>
+                      <div className="font-mono text-2xl font-bold tracking-widest text-green-700 dark:text-green-300" dir="ltr">{pairingCode}</div>
+                    </div>
+                    <button
+                      onClick={() => navigator.clipboard?.writeText(pairingCode)}
+                      className="px-3 py-2 text-sm border border-input rounded-lg hover:bg-background transition-colors"
+                    >
+                      نسخ
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowQRModal(false)} className="px-4 py-2 border border-input rounded-lg transition-all duration-300 ease-in-out interactive-card hover:scale-105 active:scale-95 hover:shadow-md">إغلاق</button>
                 <button
                   onClick={async () => {
                     try {
                       setQrData('')
+                      setPairingCode('')
                       console.log('🔄 Regenerating QR code...')
 
                       // Use the IPC handler to generate new QR
@@ -2145,6 +2224,12 @@ if (window.electronAPI?.whatsappReminders?.setSettings) {
                       if (generateResult?.success) {
                         console.log('✅ QR regeneration initiated successfully')
                         showNotification('تم بدء عملية إعادة توليد رمز QR', 'info')
+
+                        if (generateResult.qr && generateResult.qr.trim() !== '') {
+                          setQrData(generateResult.qr)
+                          showNotification('تم إعادة توليد رمز QR بنجاح!', 'success')
+                          return
+                        }
 
                         // Check for new QR with multiple attempts
                         let attempts = 0

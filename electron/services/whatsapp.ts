@@ -1,4 +1,4 @@
-import {
+﻿import {
   default as makeWASocket,
   DisconnectReason,
   useMultiFileAuthState,
@@ -18,22 +18,25 @@ let lastReadyAt: number | null = null;
 let initializationAttempts = 0;
 const MAX_INITIALIZATION_ATTEMPTS = 5;
 let isInitializing = false; // Flag to prevent multiple concurrent initializations
+let lastConnectionError: { code?: number; message?: string; at: string } | null = null;
+const WHATSAPP_SERVICE_BUILD = 'baileys-rc14-qr35-pairing-code';
+let suppressReconnectUntil = 0;
 
 const sessionPath = app.getPath('userData') + '/baileys-session';
 
 export async function initializeClient(): Promise<void> {
   if (isInitializing) {
-    console.log('⏳ WhatsApp client initialization already in progress, skipping.');
+    console.log('âڈ³ WhatsApp client initialization already in progress, skipping.');
     return;
   }
 
   isInitializing = true;
   initializationAttempts++;
-  console.log(`🚀 Initializing WhatsApp client with Baileys (attempt ${initializationAttempts}/${MAX_INITIALIZATION_ATTEMPTS})...`);
+  console.log(`ًںڑ€ Initializing WhatsApp client with Baileys (attempt ${initializationAttempts}/${MAX_INITIALIZATION_ATTEMPTS})...`);
 
   // Skip WhatsApp initialization if already initialized and ready
   if (sock && isReady) {
-    console.log('✅ WhatsApp client already initialized and ready.');
+    console.log('âœ… WhatsApp client already initialized and ready.');
     isInitializing = false;
     return;
   }
@@ -41,11 +44,12 @@ export async function initializeClient(): Promise<void> {
   // Clean up any existing socket before reinitializing
   if (sock) {
     try {
-      console.log('🧹 Cleaning up existing WhatsApp socket...');
+      console.log('ًں§¹ Cleaning up existing WhatsApp socket...');
+       suppressReconnectUntil = Date.now() + 15000;
       sock.end();
       sock = null;
     } catch (error) {
-      console.warn('⚠️ Error cleaning up existing socket:', error);
+      console.warn('âڑ ï¸ڈ Error cleaning up existing socket:', error);
     }
   }
 
@@ -53,12 +57,12 @@ export async function initializeClient(): Promise<void> {
     // Check if session path exists and create it if needed
     if (!fs.existsSync(sessionPath)) {
       fs.mkdirSync(sessionPath, { recursive: true });
-      console.log('✅ Created session directory:', sessionPath);
+      console.log('âœ… Created session directory:', sessionPath);
     }
 
-    console.log('📱 Checking session files...');
+    console.log('ًں“± Checking session files...');
     const sessionFiles = fs.readdirSync(sessionPath);
-    console.log('📁 Session files found:', sessionFiles.length > 0 ? sessionFiles : 'None');
+    console.log('ًں“پ Session files found:', sessionFiles.length > 0 ? sessionFiles : 'None');
 
     // Create auth state
     const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
@@ -69,10 +73,10 @@ export async function initializeClient(): Promise<void> {
       const fetched = await fetchLatestBaileysVersion();
       if (Array.isArray(fetched.version)) {
         waVersion = fetched.version as [number, number, number];
-        console.log('🔄 Resolved latest WA version from Baileys:', waVersion.join('.'));
+        console.log('ًں”„ Resolved latest WA version from Baileys:', waVersion.join('.'));
       }
     } catch (versionError) {
-      console.warn('⚠️ Failed to fetch latest WA version, using fallback', waVersion, versionError);
+      console.warn('âڑ ï¸ڈ Failed to fetch latest WA version, using fallback', waVersion, versionError);
     }
 
     // Create Baileys socket with enhanced configuration for latest WhatsApp compatibility
@@ -83,19 +87,15 @@ export async function initializeClient(): Promise<void> {
       },
       printQRInTerminal: false,
       logger: pino({ level: 'silent' }),
-      // Updated browser configuration for better compatibility
-      browser: Browsers.macOS('Desktop'),
-      generateHighQualityLinkPreview: true,
-      // Enhanced connection configuration for latest WhatsApp compatibility
-      connectTimeoutMs: 45000,
+      // Keep the fingerprint close to Baileys defaults; over-customizing can trigger early closes.
+      browser: Browsers.macOS('Chrome'),
+      generateHighQualityLinkPreview: false,
+      connectTimeoutMs: 20000,
       qrTimeout: 60000,
-      // Dynamically resolved version for latest WhatsApp compatibility
       version: waVersion,
-      // Improve connection reliability with better retry logic
-      retryRequestDelayMs: 500,
-      maxMsgRetryCount: 10,
-      // Add mobile-like behavior for better acceptance
-      syncFullHistory: false,
+      retryRequestDelayMs: 250,
+      maxMsgRetryCount: 5,
+      syncFullHistory: true,
       fireInitQueries: true,
       // Enhanced error handling
       shouldIgnoreJid: (jid) => false,
@@ -110,7 +110,7 @@ export async function initializeClient(): Promise<void> {
     sock.ev.on('connection.update', (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
-      console.log('🔄 Connection update:', {
+      console.log('ًں”„ Connection update:', {
         connection,
         hasQr: !!qr,
         hasError: !!lastDisconnect?.error,
@@ -120,11 +120,11 @@ export async function initializeClient(): Promise<void> {
 
       if (qr) {
         lastQr = qr;
-        console.log('📱 QR RECEIVED (length:', qr.length, '):', qr.substring(0, 50) + '...');
+        console.log('ًں“± QR RECEIVED (length:', qr.length, '):', qr.substring(0, 50) + '...');
 
         // Validate QR code before sending
         if (!qr || qr.trim().length === 0) {
-          console.error('❌ Invalid QR code received (empty or null)');
+          console.error('â‌Œ Invalid QR code received (empty or null)');
           return;
         }
 
@@ -133,9 +133,9 @@ export async function initializeClient(): Promise<void> {
           if (window.webContents && !window.webContents.isDestroyed()) {
             try {
               window.webContents.send('whatsapp:qr', qr);
-              console.log('✅ QR sent to window:', window.id);
+              console.log('âœ… QR sent to window:', window.id);
             } catch (error) {
-              console.error('❌ Failed to send QR to window:', window.id, error);
+              console.error('â‌Œ Failed to send QR to window:', window.id, error);
             }
           }
         });
@@ -147,18 +147,18 @@ export async function initializeClient(): Promise<void> {
             ipcMain.emit('whatsapp:qr', null, qr);
           }
         } catch (error) {
-          console.warn('⚠️ Could not forward QR to main process:', error);
+          console.warn('âڑ ï¸ڈ Could not forward QR to main process:', error);
         }
 
         // Set a timer to auto-mark as ready if QR is successfully scanned and connected
         // This helps with cases where the client never transitions to ready state
         setTimeout(() => {
           if (sock && !isReady && lastQr) {
-            console.log('🔄 Auto-ready timer triggered - checking connection state...');
+            console.log('ًں”„ Auto-ready timer triggered - checking connection state...');
 
             // Check if we have a socket and it's not in an error state
             if (sock && typeof sock.sendMessage === 'function') {
-              console.log('✅ Auto-marking WhatsApp client as ready after QR timeout');
+              console.log('âœ… Auto-marking WhatsApp client as ready after QR timeout');
               isReady = true;
               lastReadyAt = Date.now();
 
@@ -172,7 +172,7 @@ export async function initializeClient(): Promise<void> {
                       autoReady: true
                     });
                   } catch (error) {
-                    console.error('❌ Failed to send auto-ready event:', error);
+                    console.error('â‌Œ Failed to send auto-ready event:', error);
                   }
                 }
               });
@@ -185,23 +185,28 @@ export async function initializeClient(): Promise<void> {
         const error = lastDisconnect?.error;
         const errorCode = error?.output?.statusCode;
         const errorMessage = error?.message || 'Unknown error';
+        lastConnectionError = {
+          code: errorCode,
+          message: errorMessage,
+          at: new Date().toISOString()
+        };
 
-        console.log('🔴 Connection closed:');
+        console.log('ًں”´ Connection closed:');
         console.log('  - Error Code:', errorCode);
         console.log('  - Error Message:', errorMessage);
         console.log('  - Full Error:', error);
 
         // Enhanced error analysis for common connection errors
         if (errorCode === 405) {
-          console.error('🚨 CRITICAL: 405 Method Not Allowed error detected!');
-          console.error('🔍 DIAGNOSIS:');
+          console.error('ًںڑ¨ CRITICAL: 405 Method Not Allowed error detected!');
+          console.error('ًں”چ DIAGNOSIS:');
           console.error('  1. WhatsApp WebSocket connection method not allowed');
           console.error('  2. Baileys version may be outdated or incompatible');
           console.error('  3. WhatsApp API endpoint changes');
           console.error('  4. Network/proxy issues blocking WebSocket connection');
           console.error('  5. Browser fingerprinting issues');
           console.error('');
-          console.error('🛠️ SOLUTION:');
+          console.error('ًں› ï¸ڈ SOLUTION:');
           console.error('  - Updated Baileys to latest version');
           console.error('  - Changed browser config to macOS Desktop');
           console.error('  - Updated version to latest WhatsApp (2.24.14.80)');
@@ -209,13 +214,13 @@ export async function initializeClient(): Promise<void> {
           console.error('  - Clear session and retry');
 
           // Enhanced 405 error handling with aggressive recovery strategy
-          console.log('🔄 Enhanced 405 error handling - implementing aggressive recovery strategy...');
+          console.log('ًں”„ Enhanced 405 error handling - implementing aggressive recovery strategy...');
 
           try {
             // Use the specialized 405 error handler (without await in event handler)
             handle405Error().then((recoverySuccess) => {
               if (recoverySuccess) {
-                console.log('✅ 405 error recovery initiated successfully');
+                console.log('âœ… 405 error recovery initiated successfully');
 
                 // Notify renderer about recovery attempt
                 BrowserWindow.getAllWindows().forEach(window => {
@@ -227,12 +232,12 @@ export async function initializeClient(): Promise<void> {
                         recoveryMethod: 'aggressive_session_reset'
                       });
                     } catch (sendError) {
-                      console.error('❌ Failed to send recovery event:', sendError);
+                      console.error('â‌Œ Failed to send recovery event:', sendError);
                     }
                   }
                 });
               } else {
-                console.error('❌ 405 error recovery failed, using standard session clear');
+                console.error('â‌Œ 405 error recovery failed, using standard session clear');
 
                 // Fallback to standard session clear
                 clearSessionData();
@@ -247,38 +252,38 @@ export async function initializeClient(): Promise<void> {
                         reason: '405_recovery_failed'
                       });
                     } catch (sendError) {
-                      console.error('❌ Failed to send fallback event:', sendError);
+                      console.error('â‌Œ Failed to send fallback event:', sendError);
                     }
                   }
                 });
               }
             }).catch((recoveryError) => {
-              console.error('❌ Error in 405 recovery handler:', recoveryError);
+              console.error('â‌Œ Error in 405 recovery handler:', recoveryError);
               // Fallback to standard session clear
               clearSessionData();
             });
 
           } catch (clearError) {
-            console.error('❌ Failed to initiate 405 error recovery:', clearError);
+            console.error('â‌Œ Failed to initiate 405 error recovery:', clearError);
           }
         } else if (errorCode === 401) {
-          console.error('🚨 CRITICAL: 401 Unauthorized error detected!');
-          console.error('🔍 DIAGNOSIS:');
+          console.error('ًںڑ¨ CRITICAL: 401 Unauthorized error detected!');
+          console.error('ًں”چ DIAGNOSIS:');
           console.error('  1. WhatsApp session is invalid or expired');
           console.error('  2. Multi-device authentication conflict');
           console.error('  3. Logged out from another device');
           console.error('  4. Session files corrupted or outdated');
           console.error('');
-          console.error('🛠️ SOLUTION:');
+          console.error('ًں› ï¸ڈ SOLUTION:');
           console.error('  - Clear session data and generate new QR');
           console.error('  - Ensure no other WhatsApp sessions are active');
           console.error('  - Try logging out from WhatsApp Web on other devices');
 
           // Auto-clear session on 401 error to force fresh authentication
-          console.log('🔄 Auto-clearing session due to 401 error...');
+          console.log('ًں”„ Auto-clearing session due to 401 error...');
           try {
             clearSessionData();
-            console.log('✅ Session cleared automatically due to 401 error');
+            console.log('âœ… Session cleared automatically due to 401 error');
 
             // Notify renderer about auto-clear
             BrowserWindow.getAllWindows().forEach(window => {
@@ -290,23 +295,26 @@ export async function initializeClient(): Promise<void> {
                     reason: '401_unauthorized'
                   });
                 } catch (sendError) {
-                  console.error('❌ Failed to send session auto-cleared event:', sendError);
+                  console.error('â‌Œ Failed to send session auto-cleared event:', sendError);
                 }
               }
             });
           } catch (clearError) {
-            console.error('❌ Failed to auto-clear session:', clearError);
+            console.error('â‌Œ Failed to auto-clear session:', clearError);
           }
         }
 
-        const shouldReconnect = (error instanceof Boom)
-          ? error.output.statusCode !== DisconnectReason.loggedOut
-          : true;
+        const suppressReconnect = Date.now() < suppressReconnectUntil;
+        const shouldReconnect = suppressReconnect
+          ? false
+          : (error instanceof Boom)
+            ? error.output.statusCode !== DisconnectReason.loggedOut
+            : true;
 
-        console.log('🔄 Should reconnect:', shouldReconnect);
+        console.log('ًں”„ Should reconnect:', shouldReconnect);
 
         if (shouldReconnect) {
-          console.log('🔄 Connection lost, attempting to reconnect...');
+          console.log('ًں”„ Connection lost, attempting to reconnect...');
           isReady = false;
           lastQr = null;
           isInitializing = false;
@@ -322,14 +330,14 @@ export async function initializeClient(): Promise<void> {
                   shouldRetry: true
                 });
               } catch (error) {
-                console.error('❌ Failed to send connection failure event:', error);
+                console.error('â‌Œ Failed to send connection failure event:', error);
               }
             }
           });
 
           attemptReinitialization();
         } else {
-          console.log('📱 Logged out from WhatsApp');
+          console.log('ًں“± Logged out from WhatsApp');
           isReady = false;
           lastQr = null;
 
@@ -342,7 +350,7 @@ export async function initializeClient(): Promise<void> {
                   timestamp: Date.now()
                 });
               } catch (error) {
-                console.error('❌ Failed to send auth failure event:', error);
+                console.error('â‌Œ Failed to send auth failure event:', error);
               }
             }
           });
@@ -351,8 +359,9 @@ export async function initializeClient(): Promise<void> {
       } else if (connection === 'open') {
         isReady = true;
         lastReadyAt = Date.now();
-        console.log('✅ WhatsApp Client is READY!');
-        console.log('📊 Connection established successfully at:', new Date(lastReadyAt).toISOString());
+        lastConnectionError = null;
+        console.log('âœ… WhatsApp Client is READY!');
+        console.log('ًں“ٹ Connection established successfully at:', new Date(lastReadyAt).toISOString());
 
         // Send ready event to all windows
         BrowserWindow.getAllWindows().forEach(window => {
@@ -362,9 +371,9 @@ export async function initializeClient(): Promise<void> {
                 timestamp: lastReadyAt,
                 message: 'WhatsApp client is ready for sending messages'
               });
-              console.log('✅ Ready event sent to window:', window.id);
+              console.log('âœ… Ready event sent to window:', window.id);
             } catch (error) {
-              console.error('❌ Failed to send ready event to window:', window.id, error);
+              console.error('â‌Œ Failed to send ready event to window:', window.id, error);
             }
           }
         });
@@ -374,12 +383,12 @@ export async function initializeClient(): Promise<void> {
           if (window.webContents && !window.webContents.isDestroyed()) {
             try {
               window.webContents.send('whatsapp:session:connected', {
-                message: 'تم ربط واتساب بنجاح',
+                message: 'طھظ… ط±ط¨ط· ظˆط§طھط³ط§ط¨ ط¨ظ†ط¬ط§ط­',
                 timestamp: lastReadyAt
               });
-              console.log('✅ Connected event sent to window:', window.id);
+              console.log('âœ… Connected event sent to window:', window.id);
             } catch (error) {
-              console.error('❌ Failed to send connected event to window:', window.id, error);
+              console.error('â‌Œ Failed to send connected event to window:', window.id, error);
             }
           }
         });
@@ -398,20 +407,20 @@ export async function initializeClient(): Promise<void> {
 
       // Log additional connection states for debugging
       if (connection === 'connecting') {
-        console.log('🔗 WhatsApp client connecting...');
+        console.log('ًں”— WhatsApp client connecting...');
       } else if (connection === 'open') {
-        console.log('🔓 WhatsApp connection opened, initializing...');
+        console.log('ًں”“ WhatsApp connection opened, initializing...');
       }
     });
 
     // Handle messages update event to track when client is fully ready
     sock.ev.on('messages.upsert', (m: any) => {
       if (!isReady && m.messages && m.messages.length > 0) {
-        console.log('📨 Messages received, client appears functional');
+        console.log('ًں“¨ Messages received, client appears functional');
         // If we're receiving messages but not marked as ready, mark as ready after a delay
         setTimeout(() => {
           if (!isReady && sock) {
-            console.log('🔄 Auto-marking client as ready after receiving messages');
+            console.log('ًں”„ Auto-marking client as ready after receiving messages');
             isReady = true;
             lastReadyAt = Date.now();
           }
@@ -419,10 +428,10 @@ export async function initializeClient(): Promise<void> {
       }
     });
 
-    console.log('✅ WhatsApp client initialized successfully with Baileys');
+    console.log('âœ… WhatsApp client initialized successfully with Baileys');
 
   } catch (error: any) {
-    console.error('❌ WhatsApp client initialization failed:');
+    console.error('â‌Œ WhatsApp client initialization failed:');
     console.error('  - Error Type:', error?.constructor?.name || 'Unknown');
     console.error('  - Error Message:', error?.message || 'Unknown error');
     console.error('  - Error Code:', error?.code || 'N/A');
@@ -431,21 +440,21 @@ export async function initializeClient(): Promise<void> {
     // Check for common error patterns
     if (error?.message) {
       if (error.message.includes('401')) {
-        console.error('🚨 401 Authorization Error - Session may be invalid');
+        console.error('ًںڑ¨ 401 Authorization Error - Session may be invalid');
       }
       if (error.message.includes('timeout')) {
-        console.error('⏱️ Connection Timeout - Network issues detected');
+        console.error('âڈ±ï¸ڈ Connection Timeout - Network issues detected');
       }
       if (error.message.includes('ECONNRESET') || error.message.includes('ENOTFOUND')) {
-        console.error('🌐 Network Error - Check internet connection');
+        console.error('ًںŒگ Network Error - Check internet connection');
       }
       if (error.message.includes('session')) {
-        console.error('🔐 Session Error - May need to re-authenticate');
+        console.error('ًں”گ Session Error - May need to re-authenticate');
       }
     }
 
     // Log diagnostic information
-    console.log('📊 Diagnostic Info at failure:');
+    console.log('ًں“ٹ Diagnostic Info at failure:');
     console.log('  - Session Path:', sessionPath);
     console.log('  - Session Exists:', fs.existsSync(sessionPath));
     if (fs.existsSync(sessionPath)) {
@@ -473,17 +482,17 @@ export async function initializeClient(): Promise<void> {
             attempts: initializationAttempts
           });
         } catch (sendError) {
-          console.error('❌ Failed to send init failure event:', sendError);
+          console.error('â‌Œ Failed to send init failure event:', sendError);
         }
       }
     });
 
     // Attempt to reinitialize only if we haven't exceeded max attempts
     if (initializationAttempts < MAX_INITIALIZATION_ATTEMPTS) {
-      console.log('🔄 Attempting to reinitialize after failure...');
+      console.log('ًں”„ Attempting to reinitialize after failure...');
       attemptReinitialization();
     } else {
-      console.error('❌ Max initialization attempts reached. Manual intervention required.');
+      console.error('â‌Œ Max initialization attempts reached. Manual intervention required.');
       // Clear session and notify user
       clearSessionData();
     }
@@ -505,19 +514,19 @@ function attemptReinitialization() {
       delay = (initializationAttempts + 1) * 5000;
     }
 
-    console.log(`⏳ Enhanced retry strategy: waiting ${delay / 1000} seconds (attempt ${initializationAttempts + 1}/${MAX_INITIALIZATION_ATTEMPTS})...`);
+    console.log(`âڈ³ Enhanced retry strategy: waiting ${delay / 1000} seconds (attempt ${initializationAttempts + 1}/${MAX_INITIALIZATION_ATTEMPTS})...`);
 
     setTimeout(async () => {
       try {
         isInitializing = false; // Reset flag before retry
-        console.log(`🔄 Starting retry attempt ${initializationAttempts + 1}...`);
+        console.log(`ًں”„ Starting retry attempt ${initializationAttempts + 1}...`);
         await initializeClient();
       } catch (error) {
-        console.error('❌ Retry initialization failed:', error);
+        console.error('â‌Œ Retry initialization failed:', error);
       }
     }, delay);
   } else {
-    console.error(`❌ Maximum WhatsApp client initialization attempts reached (${MAX_INITIALIZATION_ATTEMPTS}). Clearing session data and notifying user.`);
+    console.error(`â‌Œ Maximum WhatsApp client initialization attempts reached (${MAX_INITIALIZATION_ATTEMPTS}). Clearing session data and notifying user.`);
     clearSessionData(); // Clear session if max attempts reached
 
     // Notify user about the failure
@@ -529,7 +538,7 @@ function attemptReinitialization() {
             timestamp: Date.now()
           });
         } catch (error) {
-          console.error('❌ Failed to send auth failure notification:', error);
+          console.error('â‌Œ Failed to send auth failure notification:', error);
         }
       }
     });
@@ -554,13 +563,14 @@ export function getLastReadyAt(): number | null {
 
 // Function to clear WhatsApp session data
 export function clearSessionData(): void {
-  console.log('🧹 Clearing WhatsApp session data...');
+  console.log('ًں§¹ Clearing WhatsApp session data...');
 
   if (sock) {
     try {
+       suppressReconnectUntil = Date.now() + 15000;
       sock.end();
       sock = null;
-      console.log('✅ WhatsApp socket ended');
+      console.log('âœ… WhatsApp socket ended');
     } catch (e) {
       console.error('Error ending WhatsApp socket:', e);
     }
@@ -576,9 +586,9 @@ export function clearSessionData(): void {
   if (fs.existsSync(sessionPath)) {
     try {
       fs.rmSync(sessionPath, { recursive: true, force: true });
-      console.log('✅ WhatsApp session directory cleared');
+      console.log('âœ… WhatsApp session directory cleared');
     } catch (e) {
-      console.error('❌ Error clearing WhatsApp session directory:', e);
+      console.error('â‌Œ Error clearing WhatsApp session directory:', e);
     }
   }
 
@@ -587,28 +597,29 @@ export function clearSessionData(): void {
     if (window.webContents && !window.webContents.isDestroyed()) {
       try {
         window.webContents.send('whatsapp:session_cleared', { timestamp: Date.now() });
-        console.log('✅ Session cleared event sent to window:', window.id);
+        console.log('âœ… Session cleared event sent to window:', window.id);
       } catch (error) {
-        console.error('❌ Failed to send session cleared event to window:', window.id, error);
+        console.error('â‌Œ Failed to send session cleared event to window:', window.id, error);
       }
     }
   });
 
-  console.log('✅ WhatsApp session data fully cleared');
+  console.log('âœ… WhatsApp session data fully cleared');
 }
 
 // Function to reinitialize connection (lighter than full reset)
 async function reinitializeConnection(): Promise<void> {
-  console.log('🔄 Reinitializing WhatsApp connection...');
+  console.log('ًں”„ Reinitializing WhatsApp connection...');
 
   if (sock) {
     try {
       // Try to gracefully end the current connection
+       suppressReconnectUntil = Date.now() + 15000;
       sock.end();
       sock = null;
-      console.log('✅ Previous socket connection ended');
+      console.log('âœ… Previous socket connection ended');
     } catch (error) {
-      console.warn('⚠️ Error ending previous socket:', error);
+      console.warn('âڑ ï¸ڈ Error ending previous socket:', error);
     }
   }
 
@@ -622,16 +633,16 @@ async function reinitializeConnection(): Promise<void> {
   try {
     // Reinitialize the client
     await initializeClient();
-    console.log('✅ WhatsApp connection reinitialized');
+    console.log('âœ… WhatsApp connection reinitialized');
   } catch (error) {
-    console.error('❌ Failed to reinitialize connection:', error);
+    console.error('â‌Œ Failed to reinitialize connection:', error);
     throw error;
   }
 }
 
 // Function to reset and reinitialize the session
 export async function resetSession(): Promise<void> {
-  console.log('🔄 Resetting WhatsApp session...');
+  console.log('ًں”„ Resetting WhatsApp session...');
 
   // Clear existing session
   clearSessionData();
@@ -642,7 +653,7 @@ export async function resetSession(): Promise<void> {
   // Reinitialize
   await initializeClient();
 
-  console.log('✅ WhatsApp session reset completed');
+  console.log('âœ… WhatsApp session reset completed');
 }
 
 // Enhanced diagnostic function for troubleshooting WhatsApp issues
@@ -653,6 +664,7 @@ export function getWhatsAppDiagnosticInfo(): any {
     lastQr: lastQr ? 'Present' : 'None',
     lastReadyAt,
     initializationAttempts,
+    lastConnectionError,
     sessionPath,
     socketExists: !!sock,
     socketType: sock ? typeof sock : 'null',
@@ -683,116 +695,310 @@ export function getWhatsAppStatus(): any {
 
 // Enhanced function to handle 405 Method Not Allowed errors specifically
 async function handle405Error(): Promise<boolean> {
-  console.log('🚨 Handling 405 Method Not Allowed error with aggressive recovery...');
+  console.log('ًںڑ¨ Handling 405 Method Not Allowed error with aggressive recovery...');
 
   try {
     // Step 1: Clear all session data
-    console.log('🧹 Step 1: Clearing all session data...');
+    console.log('ًں§¹ Step 1: Clearing all session data...');
     clearSessionData();
 
     // Step 2: Wait longer for cleanup
-    console.log('⏳ Step 2: Waiting for cleanup...');
+    console.log('âڈ³ Step 2: Waiting for cleanup...');
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Step 3: Force fresh initialization with enhanced config
-    console.log('🚀 Step 3: Force fresh initialization...');
+    console.log('ًںڑ€ Step 3: Force fresh initialization...');
     initializationAttempts = 0; // Reset attempts for fresh start
     isInitializing = false;
 
     // Step 4: Initialize with more conservative settings for 405 recovery
     await initializeClient();
 
-    console.log('✅ 405 error recovery completed successfully');
+    console.log('âœ… 405 error recovery completed successfully');
     return true;
 
   } catch (error) {
-    console.error('❌ 405 error recovery failed:', error);
+    console.error('â‌Œ 405 error recovery failed:', error);
     return false;
   }
 }
 
 // Function to force generate a new QR code
-export async function generateNewQR(): Promise<{success: boolean, error?: string, details?: any}> {
+export async function generateNewQR(): Promise<{success: boolean, qr?: string, error?: string, details?: any}> {
   try {
-    console.log('🔄 Forcing QR code generation...');
-
-    // Clear any existing state
+    console.log('Generating WhatsApp QR with isolated Baileys socket...');
     lastQr = null;
     isReady = false;
+    lastConnectionError = null;
 
-    // Clean up existing socket
     if (sock) {
       try {
-        console.log('🧹 Cleaning up existing socket...');
+        suppressReconnectUntil = Date.now() + 15000;
         sock.end();
         sock = null;
       } catch (cleanupError) {
-        console.warn('⚠️ Error during socket cleanup:', cleanupError);
+        console.warn('Error during socket cleanup:', cleanupError);
       }
     }
 
-    // Clear session directory to force fresh authentication
     if (fs.existsSync(sessionPath)) {
       try {
-        console.log('🗑️ Clearing session directory for fresh QR...');
         fs.rmSync(sessionPath, { recursive: true, force: true });
-        console.log('✅ Session directory cleared');
       } catch (sessionError) {
-        console.warn('⚠️ Error clearing session directory:', sessionError);
+        console.warn('Error clearing session directory:', sessionError);
       }
     }
 
-    // Reset initialization attempts
     initializationAttempts = 0;
     isInitializing = false;
 
-    // Create a fresh client
-    console.log('🚀 Creating fresh WhatsApp client for QR generation...');
-    await initializeClient();
-
-    // Wait for QR code to be generated with improved timeout handling
-    let attempts = 0;
-    const maxAttempts = 15; // Increased from 10 to 15
-
-    while (attempts < maxAttempts) {
-      attempts++;
-      console.log(`⏳ Waiting for QR code (attempt ${attempts}/${maxAttempts})...`);
-
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Increased delay to 2 seconds
-
-      if (lastQr) {
-        console.log('✅ QR code generated successfully after', attempts, 'attempts');
-        return { success: true };
-      }
-
-      // Check if socket is still connected and trying to generate QR
-      if (sock && typeof sock.ev === 'object') {
-        console.log(`📊 Socket state check - attempts: ${attempts}, max: ${maxAttempts}`);
-      }
+    if (!fs.existsSync(sessionPath)) {
+      fs.mkdirSync(sessionPath, { recursive: true });
     }
 
-    console.log('⚠️ QR code generation timeout - no QR received after', maxAttempts, 'attempts');
-    return {
-      success: false,
-      error: 'QR code generation timeout - no QR received after maximum attempts',
-      details: { maxAttempts, actualAttempts: attempts }
-    };
-
-  } catch (error: any) {
-    console.error('❌ Failed to generate new QR:', error);
-    console.error('Error details:', {
-      message: error?.message || 'Unknown error',
-      stack: error?.stack || 'No stack trace',
-      code: error?.code || 'Unknown code'
+    const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
+    const fetched = await fetchLatestBaileysVersion().catch((versionError) => {
+      console.warn('Failed to fetch latest WA version for isolated QR:', versionError);
+      return { version: [2, 3000, 1043857760] as [number, number, number] };
     });
 
+    const qrSock = makeWASocket({
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
+      },
+      logger: pino({ level: 'silent' }),
+      printQRInTerminal: false,
+      browser: Browsers.macOS('Chrome'),
+      connectTimeoutMs: 20000,
+      qrTimeout: 60000,
+      version: fetched.version as [number, number, number],
+      syncFullHistory: true,
+      generateHighQualityLinkPreview: false,
+    });
+
+    sock = qrSock;
+    qrSock.ev.on('creds.update', saveCreds);
+
+    return await new Promise((resolve) => {
+      const timeoutMs = 70000;
+      const startedAt = Date.now();
+      let settled = false;
+      let timer: NodeJS.Timeout;
+
+      const finish = (result: {success: boolean, qr?: string, error?: string, details?: any}) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try {
+          qrSock.ev.off('connection.update', handleUpdate);
+        } catch {}
+        resolve(result);
+      };
+
+      const handleUpdate = (update: any) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr && qr.trim() !== '') {
+          lastQr = qr;
+          BrowserWindow.getAllWindows().forEach(window => {
+            if (window.webContents && !window.webContents.isDestroyed()) {
+              window.webContents.send('whatsapp:qr', qr);
+            }
+          });
+          finish({
+            success: true,
+            qr,
+            details: {
+              method: 'isolated_socket',
+              elapsedMs: Date.now() - startedAt,
+              serviceBuild: WHATSAPP_SERVICE_BUILD
+            }
+          });
+          return;
+        }
+
+        if (connection === 'close') {
+          const error = lastDisconnect?.error;
+          lastConnectionError = {
+            code: error?.output?.statusCode,
+            message: error?.message || 'Connection closed before QR',
+            at: new Date().toISOString()
+          };
+          finish({
+            success: false,
+            error: lastConnectionError.message,
+            details: {
+              method: 'isolated_socket',
+              lastConnectionError,
+              elapsedMs: Date.now() - startedAt,
+              serviceBuild: WHATSAPP_SERVICE_BUILD
+            }
+          });
+        }
+      };
+
+      timer = setTimeout(() => {
+        finish({
+          success: false,
+          error: 'Timed out waiting for WhatsApp QR',
+          details: {
+            method: 'isolated_socket',
+            timeoutMs,
+            hasSocket: !!sock,
+            lastConnectionError,
+            serviceBuild: WHATSAPP_SERVICE_BUILD
+          }
+        });
+      }, timeoutMs);
+
+      qrSock.ev.on('connection.update', handleUpdate);
+    });
+  } catch (error: any) {
+    console.error('Failed to generate new QR:', error);
     return {
       success: false,
       error: error?.message || 'Unknown error',
       details: {
         type: error?.constructor?.name || 'Unknown',
         code: error?.code || 'N/A',
-        stack: error?.stack?.substring(0, 500) || 'No stack trace'
+        stack: error?.stack?.substring(0, 500) || 'No stack trace',
+        serviceBuild: WHATSAPP_SERVICE_BUILD
+      }
+    };
+  }
+}
+function waitForPairingWindow(timeoutMs = 45000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (lastQr) {
+      resolve();
+      return;
+    }
+
+    if (!sock?.ev?.on) {
+      reject(new Error('WhatsApp socket is not available'));
+      return;
+    }
+
+    let settled = false;
+    let timer: NodeJS.Timeout | null = null;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      try {
+        sock?.ev?.off?.('connection.update', handleConnectionUpdate);
+      } catch (cleanupError) {
+        console.warn('âڑ ï¸ڈ Failed to remove pairing window listener:', cleanupError);
+      }
+    };
+
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+
+    const handleConnectionUpdate = (update: any) => {
+      if (update?.qr) {
+        finish(resolve);
+        return;
+      }
+
+      if (update?.connection === 'close') {
+        const error = update?.lastDisconnect?.error;
+        finish(() => reject(error || new Error('Connection closed before pairing window opened')));
+      }
+    };
+
+    timer = setTimeout(() => {
+      finish(() => reject(new Error('Timed out waiting for WhatsApp pairing window')));
+    }, timeoutMs);
+
+    sock.ev.on('connection.update', handleConnectionUpdate);
+  });
+}
+
+export async function generatePairingCode(phoneNumber: string): Promise<{success: boolean, pairingCode?: string, phoneNumber?: string, error?: string, details?: any}> {
+  try {
+    const normalizedPhoneNumber = String(phoneNumber || '').replace(/\D/g, '');
+
+    if (normalizedPhoneNumber.length < 8 || normalizedPhoneNumber.length > 15) {
+      return {
+      success: false,
+      error: 'Phone number must include country code and digits only',
+      details: { normalizedPhoneNumberLength: normalizedPhoneNumber.length, serviceBuild: WHATSAPP_SERVICE_BUILD }
+      };
+    }
+
+    console.log('ًں”„ Generating WhatsApp pairing code for:', normalizedPhoneNumber);
+
+    lastQr = null;
+    isReady = false;
+    lastConnectionError = null;
+
+    if (sock) {
+      try {
+        console.log('ًں§¹ Cleaning up existing socket before pairing code generation...');
+         suppressReconnectUntil = Date.now() + 15000;
+        sock.end();
+        sock = null;
+      } catch (cleanupError) {
+        console.warn('âڑ ï¸ڈ Error during socket cleanup:', cleanupError);
+      }
+    }
+
+    if (fs.existsSync(sessionPath)) {
+      try {
+        console.log('ًں—‘ï¸ڈ Clearing session directory for fresh pairing code...');
+        fs.rmSync(sessionPath, { recursive: true, force: true });
+      } catch (sessionError) {
+        console.warn('âڑ ï¸ڈ Error clearing session directory:', sessionError);
+      }
+    }
+
+    initializationAttempts = 0;
+    isInitializing = false;
+
+    await initializeClient();
+    await waitForPairingWindow();
+
+    if (!sock || typeof sock.requestPairingCode !== 'function') {
+      return {
+        success: false,
+      error: 'Pairing code API is not available on the WhatsApp socket',
+      details: { hasSocket: !!sock, socketKeys: sock ? Object.keys(sock).slice(0, 30) : [], serviceBuild: WHATSAPP_SERVICE_BUILD }
+      };
+    }
+
+    if (sock.authState?.creds?.registered) {
+      return {
+        success: false,
+      error: 'WhatsApp socket is already registered. Reset the session before pairing again.',
+      details: { registered: true, serviceBuild: WHATSAPP_SERVICE_BUILD }
+      };
+    }
+
+    const pairingCode = await sock.requestPairingCode(normalizedPhoneNumber);
+
+    return {
+      success: true,
+      pairingCode,
+      phoneNumber: normalizedPhoneNumber,
+      details: { method: 'pairing_code', serviceBuild: WHATSAPP_SERVICE_BUILD }
+    };
+  } catch (error: any) {
+    console.error('â‌Œ Failed to generate WhatsApp pairing code:', error);
+
+    return {
+      success: false,
+      error: error?.message || 'Failed to generate pairing code',
+      details: {
+        type: error?.constructor?.name || 'Unknown',
+        code: error?.code || 'N/A',
+        stack: error?.stack?.substring(0, 500) || 'No stack trace',
+        lastConnectionError,
+        serviceBuild: WHATSAPP_SERVICE_BUILD
       }
     };
   }
@@ -802,44 +1008,44 @@ export async function sendMessage(phoneNumber: string, message: string, retryCou
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 1000; // 1 second
 
-  console.log(`📱 Attempting to send WhatsApp message (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+  console.log(`ًں“± Attempting to send WhatsApp message (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
 
   // Enhanced connection state validation
   if (!sock) {
-    console.error('❌ WhatsApp socket is null/undefined');
+    console.error('â‌Œ WhatsApp socket is null/undefined');
     throw new Error('WhatsApp client is not initialized.');
   }
 
   // More lenient ready state check - wait for ready state or proceed if socket is functional
   if (!isReady) {
-    console.warn('⚠️ WhatsApp client is not ready, but socket exists. Checking socket state...');
+    console.warn('âڑ ï¸ڈ WhatsApp client is not ready, but socket exists. Checking socket state...');
 
     // Check if socket appears functional even if not marked as ready
     if (typeof sock.sendMessage === 'function') {
-      console.log('✅ Socket has sendMessage method, attempting to send despite not being ready...');
+      console.log('âœ… Socket has sendMessage method, attempting to send despite not being ready...');
 
       // Try to wait a bit for ready state
       let waitAttempts = 0;
       const maxWaitAttempts = 5; // Wait up to 5 seconds
 
       while (!isReady && waitAttempts < maxWaitAttempts && sock) {
-        console.log(`⏳ Waiting for ready state (attempt ${waitAttempts + 1}/${maxWaitAttempts})...`);
+        console.log(`âڈ³ Waiting for ready state (attempt ${waitAttempts + 1}/${maxWaitAttempts})...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         waitAttempts++;
       }
 
       if (!isReady) {
-        console.warn('⚠️ Proceeding with message send despite not being fully ready...');
+        console.warn('âڑ ï¸ڈ Proceeding with message send despite not being fully ready...');
       }
     } else {
-      console.error('❌ WhatsApp socket does not have sendMessage method');
+      console.error('â‌Œ WhatsApp socket does not have sendMessage method');
       throw new Error('WhatsApp client is not properly initialized.');
     }
   }
 
   // Final check - if socket is completely invalid, throw error
   if (typeof sock.sendMessage !== 'function') {
-    console.error('❌ WhatsApp socket does not have sendMessage method');
+    console.error('â‌Œ WhatsApp socket does not have sendMessage method');
     throw new Error('WhatsApp client is not properly initialized.');
   }
 
@@ -862,7 +1068,7 @@ export async function sendMessage(phoneNumber: string, message: string, retryCou
   const finalNumber = sanitizedNumber.startsWith('+') ? sanitizedNumber : `+${sanitizedNumber}`;
 
   try {
-    console.log(`📱 Sending message to ${finalNumber}...`);
+    console.log(`ًں“± Sending message to ${finalNumber}...`);
 
     // Send message using Baileys with timeout
     const sendPromise = sock.sendMessage(`${finalNumber}@s.whatsapp.net`, { text: message.trim() });
@@ -874,10 +1080,10 @@ export async function sendMessage(phoneNumber: string, message: string, retryCou
 
     await Promise.race([sendPromise, timeoutPromise]);
 
-    console.log(`✅ Message sent successfully to ${finalNumber}`);
+    console.log(`âœ… Message sent successfully to ${finalNumber}`);
     return { success: true, phoneNumber: finalNumber };
   } catch (error: any) {
-    console.error(`❌ Failed to send message to ${finalNumber}:`, error);
+    console.error(`â‌Œ Failed to send message to ${finalNumber}:`, error);
 
     // Check if error is recoverable
     const isRecoverableError = (
@@ -896,18 +1102,18 @@ export async function sendMessage(phoneNumber: string, message: string, retryCou
 
     // Attempt retry if error is recoverable and we haven't exceeded max retries
     if (isRecoverableError && retryCount < MAX_RETRIES) {
-      console.log(`🔄 Retrying message send in ${RETRY_DELAY}ms (attempt ${retryCount + 2}/${MAX_RETRIES + 1})`);
+      console.log(`ًں”„ Retrying message send in ${RETRY_DELAY}ms (attempt ${retryCount + 2}/${MAX_RETRIES + 1})`);
 
       // Wait before retry
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
 
       // Attempt to reinitialize connection if this is not the first retry
       if (retryCount === 0) {
-        console.log('🔄 Attempting to reinitialize WhatsApp connection...');
+        console.log('ًں”„ Attempting to reinitialize WhatsApp connection...');
         try {
           await reinitializeConnection();
         } catch (reinitError) {
-          console.warn('⚠️ Failed to reinitialize connection:', reinitError);
+          console.warn('âڑ ï¸ڈ Failed to reinitialize connection:', reinitError);
         }
       }
 
@@ -916,7 +1122,8 @@ export async function sendMessage(phoneNumber: string, message: string, retryCou
     }
 
     // If retries exhausted or error is not recoverable, throw the error
-    console.error(`❌ All retry attempts failed for ${finalNumber}`);
+    console.error(`â‌Œ All retry attempts failed for ${finalNumber}`);
     throw new Error(`Failed to send WhatsApp message after ${retryCount + 1} attempts: ${error.message}`);
   }
 }
+

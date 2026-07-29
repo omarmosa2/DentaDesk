@@ -114,6 +114,19 @@ export interface ElectronAPI {
       hasQr: boolean
       qr?: string
     }>
+    generateNewQR: () => Promise<{
+      success: boolean
+      qr?: string | null
+      error?: string | null
+      details?: any
+    }>
+    generatePairingCode: (phoneNumber: string) => Promise<{
+      success: boolean
+      pairingCode?: string | null
+      phoneNumber?: string | null
+      error?: string | null
+      details?: any
+    }>
   }
 
   // Lab operations
@@ -405,6 +418,8 @@ const electronAPI: ElectronAPI = {
     testSendReminder: (phoneNumber, message) => ipcRenderer.invoke('whatsapp-reminders:test-send', phoneNumber, message),
     resetSession: () => ipcRenderer.invoke('whatsapp-reminders:reset-session'),
     getStatus: () => ipcRenderer.invoke('whatsapp-reminders:get-status'),
+    generateNewQR: () => ipcRenderer.invoke('whatsapp-reminders:generate-new-qr'),
+    generatePairingCode: (phoneNumber) => ipcRenderer.invoke('whatsapp-reminders:generate-pairing-code', phoneNumber),
     logoutOtherDevices: () => ipcRenderer.invoke('whatsapp-reminders:logout-other-devices'),
   },
 

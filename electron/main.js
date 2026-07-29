@@ -3870,6 +3870,7 @@ try {
         success: result.success,
         message: result.success ? 'QR code generated successfully' : (result.error || 'Failed to generate QR code'),
         timestamp: Date.now(),
+        qr: result.qr || null,
         details: result.details || {},
         error: result.error || null
       };
@@ -3884,6 +3885,41 @@ try {
       return {
         success: false,
         error: error?.message || 'Failed to generate QR code',
+        timestamp: Date.now(),
+        details: {
+          type: error?.constructor?.name || 'Unknown',
+          code: error?.code || 'N/A',
+          stack: error?.stack?.substring(0, 500) || 'No stack trace'
+        }
+      };
+    }
+  });
+
+  ipcMain.handle('whatsapp-reminders:generate-pairing-code', async (_event, phoneNumber) => {
+    try {
+      console.log('🔧 Main: Starting pairing code IPC handler...');
+      const whatsappService = require('./services/whatsapp');
+
+      if (!whatsappService || typeof whatsappService.generatePairingCode !== 'function') {
+        throw new Error('generatePairingCode function not available in WhatsApp service');
+      }
+
+      const result = await whatsappService.generatePairingCode(phoneNumber);
+
+      return {
+        success: result.success,
+        message: result.success ? 'Pairing code generated successfully' : (result.error || 'Failed to generate pairing code'),
+        timestamp: Date.now(),
+        pairingCode: result.pairingCode || null,
+        phoneNumber: result.phoneNumber || null,
+        details: result.details || {},
+        error: result.error || null
+      };
+    } catch (error) {
+      console.error('❌ Main: Error in pairing code IPC handler:', error);
+      return {
+        success: false,
+        error: error?.message || 'Failed to generate pairing code',
         timestamp: Date.now(),
         details: {
           type: error?.constructor?.name || 'Unknown',
