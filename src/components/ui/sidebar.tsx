@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { X } from "lucide-react"
+import { Menu } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -25,7 +25,7 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH = "15rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -159,7 +159,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "sidebar-wrapper group/sidebar-wrapper flex min-h-screen w-full has-[[data-variant=inset]]:bg-sidebar",
+              "sidebar-wrapper group/sidebar-wrapper flex min-h-screen w-full overflow-x-hidden has-[[data-variant=inset]]:bg-sidebar",
               className
             )}
             ref={ref}
@@ -237,30 +237,22 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className="group peer hidden text-sidebar-foreground md:block"
+        className={cn(
+          "group peer hidden shrink-0 text-sidebar-foreground transition-[width] duration-300 ease-in-out md:block",
+          state === "collapsed" ? "w-0" : "w-[--sidebar-width]"
+        )}
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
       >
-        {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
-            "relative w-[--sidebar-width] bg-transparent transition-[width] duration-200 ease-linear",
-            "group-data-[collapsible=offcanvas]:w-0",
-            "group-data-[state=collapsed]:w-0",
-            "group-data-[side=right]:rotate-180",
-            variant === "floating" || variant === "inset"
-              ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]"
-              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon]"
-          )}
-        />
-        <div
-          className={cn(
-            "w-[--sidebar-width] transition-[left,right,width] duration-200 ease-linear md:flex h-full",
+            "fixed inset-y-0 z-30 hidden h-screen w-[--sidebar-width] transition-transform duration-300 ease-in-out md:flex",
             side === "left"
-              ? "left-0 group-data-[state=collapsed]:-left-[var(--sidebar-width)]"
-              : "right-0 group-data-[state=collapsed]:-right-[var(--sidebar-width)]",
+              ? "left-0 group-data-[state=collapsed]:-translate-x-full"
+              : "right-0 group-data-[state=collapsed]:translate-x-full",
+            "group-data-[state=expanded]:translate-x-0 group-data-[state=collapsed]:pointer-events-none",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
@@ -304,8 +296,8 @@ const SidebarTrigger = React.forwardRef<
       title={open ? "إغلاق السايدبار" : "فتح السايدبار"}
       {...props}
     >
-      <X className="h-4 w-4" />
-      <span className="sr-only">إغلاق السايدبار</span>
+      <Menu className="h-4 w-4" />
+      <span className="sr-only">{open ? "إغلاق السايدبار" : "فتح السايدبار"}</span>
     </Button>
   )
 })

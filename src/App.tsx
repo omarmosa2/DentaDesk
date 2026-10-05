@@ -699,13 +699,13 @@ function AppContent() {
 
   return (
     <SidebarProvider>
-      <div className="flex w-full group/sidebar-layout h-screen min-h-screen">
+      <div className="flex w-full group/sidebar-layout h-screen min-h-screen overflow-hidden">
         <AppSidebar 
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
         />
         <SidebarInset 
-          className="flex-1"
+          className="min-w-0 flex-1 overflow-hidden transition-[width] duration-300 ease-in-out"
         >
      <header className="flex flex-row-reverse items-center justify-between h-16 w-full bg-background/95 backdrop-blur border-b border-border/40 dark:bg-gray-900/95 dark:border-gray-700 px-4 gap-4" dir="rtl">
 

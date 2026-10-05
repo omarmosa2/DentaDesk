@@ -1,5 +1,5 @@
 import * as React from "react"
-import { X } from "lucide-react"
+import { Menu } from "lucide-react"
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
 import { Button } from "@/components/ui/button"
@@ -22,8 +22,8 @@ export function AppSidebarTrigger() {
       className="h-7 w-7 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
       title={open ? "إغلاق السايدبار" : "فتح السايدبار"}
     >
-      <X className="h-4 w-4" />
-      <span className="sr-only">إغلاق السايدبار</span>
+      <Menu className="h-4 w-4" />
+      <span className="sr-only">{open ? "إغلاق السايدبار" : "فتح السايدبار"}</span>
     </Button>
   )
 }

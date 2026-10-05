@@ -25,6 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 import { useStableClinicName, useStableDoctorName, useStableClinicLogo } from "@/hooks/useStableSettings"
@@ -122,6 +123,14 @@ export function AppSidebar({ activeTab, onTabChange, ...props }: AppSidebarProps
   const clinicName = useStableClinicName()
   const doctorName = useStableDoctorName()
   const clinicLogo = useStableClinicLogo()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleTabClick = React.useCallback((tab: string) => {
+    onTabChange(tab)
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }, [isMobile, onTabChange, setOpenMobile])
 
   return (
     <Sidebar
@@ -202,7 +211,7 @@ export function AppSidebar({ activeTab, onTabChange, ...props }: AppSidebarProps
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     isActive={activeTab === item.url}
-                    onClick={() => onTabChange(item.url)}
+                    onClick={() => handleTabClick(item.url)}
                     className={`flex items-center gap-4 w-full text-right justify-start transition-all duration-200 ease-out py-4 px-6 text-base nav-item rounded-xl shadow-sm hover:shadow-md border group hover:scale-[1.02] focus:scale-[1.02] focus:outline-none focus:ring-2 ${
                       activeTab === item.url
                         ? 'bg-primary/10 dark:bg-blue-500/20 border-primary/30 dark:border-blue-500/30 text-primary dark:text-blue-400 font-semibold'
