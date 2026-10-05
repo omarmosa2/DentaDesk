@@ -175,7 +175,7 @@ export interface LabOrder {
   order_date: string
   expected_delivery_date?: string // تاريخ التسليم المتوقع
   actual_delivery_date?: string // تاريخ التسليم الفعلي
-  status: 'معلق' | 'مكتمل' | 'ملغي'
+  status: 'آجل' | 'مكتمل' | 'ملغي'
   notes?: string
   paid_amount?: number
   remaining_balance?: number

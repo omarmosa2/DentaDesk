@@ -354,7 +354,7 @@ export const useLabOrderStore = create<LabOrderStore>()(
         const totalPaid = labOrders.reduce((sum, order) => sum + (order.paid_amount || 0), 0)
         const totalRemaining = labOrders.reduce((sum, order) => sum + (order.remaining_balance || 0), 0)
 
-        const pendingOrders = labOrders.filter(order => order.status === 'معلق').length
+        const pendingOrders = labOrders.filter(order => order.status === 'آجل').length
         const completedOrders = labOrders.filter(order => order.status === 'مكتمل').length
         const cancelledOrders = labOrders.filter(order => order.status === 'ملغي').length
 

@@ -58,7 +58,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
     order_date: '',
     expected_delivery_date: '',
     actual_delivery_date: '',
-    status: 'معلق' as const,
+    status: 'آجل' as const,
     notes: '',
     paid_amount: '',
     priority: '1',
@@ -84,7 +84,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
           order_date: editingOrder.order_date || '',
           expected_delivery_date: editingOrder.expected_delivery_date || '',
           actual_delivery_date: editingOrder.actual_delivery_date || '',
-          status: editingOrder.status || 'معلق',
+          status: editingOrder.status || 'آجل',
           notes: editingOrder.notes || '',
           paid_amount: editingOrder.paid_amount?.toString() || '0',
           priority: editingOrder.priority?.toString() || '1',
@@ -106,7 +106,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
           order_date: today,
           expected_delivery_date: '',
           actual_delivery_date: '',
-          status: 'معلق',
+          status: 'آجل',
           notes: '',
           paid_amount: '0',
           priority: '1',
@@ -472,7 +472,7 @@ export default function AddLabOrderDialog({ open, onOpenChange, editingOrder }: 
                   <SelectValue className="text-muted-foreground" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="معلق">معلق</SelectItem>
+                  <SelectItem value="آجل">آجل</SelectItem>
                   <SelectItem value="مكتمل">مكتمل</SelectItem>
                   <SelectItem value="ملغي">ملغي</SelectItem>
                 </SelectContent>
