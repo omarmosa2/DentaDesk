@@ -4208,6 +4208,51 @@ class DatabaseService {
   }
 
   // NEW: Multiple treatments per tooth operations
+  parseTreatmentToothNumbers(value) {
+    if (Array.isArray(value)) {
+      return value
+        .map(Number)
+        .filter((toothNumber) => Number.isInteger(toothNumber))
+    }
+
+    if (typeof value === 'string' && value.trim()) {
+      return value
+        .split(',')
+        .map((toothNumber) => Number(toothNumber.trim()))
+        .filter((toothNumber) => Number.isInteger(toothNumber))
+    }
+
+    return []
+  }
+
+  getTreatmentToothNumbers(treatment) {
+    const rawToothNumbers = treatment.tooth_numbers ?? treatment.selected_teeth
+    const toothNumbers = this.parseTreatmentToothNumbers(rawToothNumbers)
+
+    if (Number.isInteger(Number(treatment.tooth_number))) {
+      toothNumbers.push(Number(treatment.tooth_number))
+    }
+
+    return Array.from(new Set(toothNumbers)).sort((a, b) => a - b)
+  }
+
+  mapToothTreatment(row) {
+    const toothNumbers = this.parseTreatmentToothNumbers(row.tooth_numbers_csv)
+    const fallbackToothNumber = Number(row.tooth_number)
+    const normalizedToothNumbers = toothNumbers.length > 0
+      ? toothNumbers
+      : (Number.isInteger(fallbackToothNumber) ? [fallbackToothNumber] : [])
+
+    const { tooth_numbers_csv, ...treatment } = row
+
+    return {
+      ...treatment,
+      tooth_numbers: normalizedToothNumbers,
+      tooth_count: normalizedToothNumbers.length,
+      tooth_numbers_display: normalizedToothNumbers.join(', ')
+    }
+  }
+
   ensureToothTreatmentsTableExists() {
     this.ensureConnection()
 
@@ -4313,6 +4358,24 @@ class DatabaseService {
       CREATE INDEX IF NOT EXISTS idx_tooth_treatment_images_tooth_number ON tooth_treatment_images (tooth_number);
       CREATE INDEX IF NOT EXISTS idx_tooth_treatment_images_type ON tooth_treatment_images (image_type);
     `)
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS tooth_treatment_teeth (
+        tooth_treatment_id TEXT NOT NULL,
+        tooth_number INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (tooth_treatment_id, tooth_number),
+        FOREIGN KEY (tooth_treatment_id) REFERENCES tooth_treatments (id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_tooth_treatment_teeth_tooth
+      ON tooth_treatment_teeth (tooth_number);
+
+      INSERT OR IGNORE INTO tooth_treatment_teeth (tooth_treatment_id, tooth_number, created_at)
+      SELECT id, tooth_number, COALESCE(created_at, CURRENT_TIMESTAMP)
+      FROM tooth_treatments
+      WHERE tooth_number IS NOT NULL;
+    `)
   }
 
   async getAllToothTreatments() {
@@ -4322,13 +4385,16 @@ class DatabaseService {
     const stmt = this.db.prepare(`
       SELECT tt.*,
              p.full_name as patient_name,
-             a.title as appointment_title
+             a.title as appointment_title,
+             GROUP_CONCAT(ttt.tooth_number, ',') as tooth_numbers_csv
       FROM tooth_treatments tt
+      LEFT JOIN tooth_treatment_teeth ttt ON ttt.tooth_treatment_id = tt.id
       LEFT JOIN patients p ON tt.patient_id = p.id
       LEFT JOIN appointments a ON tt.appointment_id = a.id
+      GROUP BY tt.id
       ORDER BY tt.patient_id, tt.tooth_number, tt.priority ASC
     `)
-    return stmt.all()
+    return stmt.all().map(row => this.mapToothTreatment(row))
   }
 
   async getToothTreatmentsByPatient(patientId) {
@@ -4338,14 +4404,17 @@ class DatabaseService {
     const stmt = this.db.prepare(`
       SELECT tt.*,
              p.full_name as patient_name,
-             a.title as appointment_title
+             a.title as appointment_title,
+             GROUP_CONCAT(ttt.tooth_number, ',') as tooth_numbers_csv
       FROM tooth_treatments tt
+      LEFT JOIN tooth_treatment_teeth ttt ON ttt.tooth_treatment_id = tt.id
       LEFT JOIN patients p ON tt.patient_id = p.id
       LEFT JOIN appointments a ON tt.appointment_id = a.id
       WHERE tt.patient_id = ?
+      GROUP BY tt.id
       ORDER BY tt.tooth_number ASC, tt.priority ASC
     `)
-    return stmt.all(patientId)
+    return stmt.all(patientId).map(row => this.mapToothTreatment(row))
   }
 
   async getToothTreatmentsByTooth(patientId, toothNumber) {
@@ -4355,14 +4424,26 @@ class DatabaseService {
     const stmt = this.db.prepare(`
       SELECT tt.*,
              p.full_name as patient_name,
-             a.title as appointment_title
+             a.title as appointment_title,
+             GROUP_CONCAT(ttt.tooth_number, ',') as tooth_numbers_csv
       FROM tooth_treatments tt
+      LEFT JOIN tooth_treatment_teeth ttt ON ttt.tooth_treatment_id = tt.id
       LEFT JOIN patients p ON tt.patient_id = p.id
       LEFT JOIN appointments a ON tt.appointment_id = a.id
-      WHERE tt.patient_id = ? AND tt.tooth_number = ?
+      WHERE tt.patient_id = ?
+        AND (
+          tt.tooth_number = ?
+          OR EXISTS (
+            SELECT 1
+            FROM tooth_treatment_teeth ttt_match
+            WHERE ttt_match.tooth_treatment_id = tt.id
+              AND ttt_match.tooth_number = ?
+          )
+        )
+      GROUP BY tt.id
       ORDER BY tt.priority ASC, tt.created_at DESC
     `)
-    return stmt.all(patientId, toothNumber)
+    return stmt.all(patientId, toothNumber, toothNumber).map(row => this.mapToothTreatment(row))
   }
 
   async createToothTreatment(treatment) {
@@ -4372,6 +4453,22 @@ class DatabaseService {
     const { v4: uuidv4 } = require('uuid')
     const id = uuidv4()
     const now = new Date().toISOString()
+    const toothNumbers = this.getTreatmentToothNumbers(treatment)
+    const primaryToothNumber = Number(treatment.tooth_number) || toothNumbers[0]
+
+    if (!primaryToothNumber) {
+      throw new Error('Tooth number is required')
+    }
+
+    if (toothNumbers.length === 0) {
+      toothNumbers.push(primaryToothNumber)
+    }
+
+    const toothName = treatment.tooth_name || (
+      toothNumbers.length > 1
+        ? `الأسنان ${toothNumbers.join(', ')}`
+        : `السن ${primaryToothNumber}`
+    )
 
     // Auto-assign priority if not provided
     if (!treatment.priority) {
@@ -4380,27 +4477,51 @@ class DatabaseService {
         FROM tooth_treatments
         WHERE patient_id = ? AND tooth_number = ?
       `)
-      const result = maxPriorityStmt.get(treatment.patient_id, treatment.tooth_number)
+      const result = maxPriorityStmt.get(treatment.patient_id, primaryToothNumber)
       treatment.priority = result.next_priority
     }
 
-    const stmt = this.db.prepare(`
-      INSERT INTO tooth_treatments (
-        id, patient_id, tooth_number, tooth_name, treatment_type, treatment_category,
-        treatment_status, treatment_color, start_date, completion_date, cost,
-        priority, notes, appointment_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
+    const transaction = this.db.transaction(() => {
+      const stmt = this.db.prepare(`
+        INSERT INTO tooth_treatments (
+          id, patient_id, tooth_number, tooth_name, treatment_type, treatment_category,
+          treatment_status, treatment_color, start_date, completion_date, cost,
+          priority, notes, appointment_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
 
-    stmt.run(
-      id, treatment.patient_id, treatment.tooth_number, treatment.tooth_name,
-      treatment.treatment_type, treatment.treatment_category, treatment.treatment_status,
-      treatment.treatment_color, treatment.start_date, treatment.completion_date,
-      treatment.cost, treatment.priority, treatment.notes, treatment.appointment_id,
-      now, now
-    )
+      stmt.run(
+        id, treatment.patient_id, primaryToothNumber, toothName,
+        treatment.treatment_type, treatment.treatment_category, treatment.treatment_status,
+        treatment.treatment_color, treatment.start_date, treatment.completion_date,
+        treatment.cost, treatment.priority, treatment.notes, treatment.appointment_id,
+        now, now
+      )
 
-    return { ...treatment, id, created_at: now, updated_at: now }
+      const linkStmt = this.db.prepare(`
+        INSERT OR IGNORE INTO tooth_treatment_teeth (
+          tooth_treatment_id, tooth_number, created_at
+        ) VALUES (?, ?, ?)
+      `)
+
+      toothNumbers.forEach((toothNumber) => {
+        linkStmt.run(id, toothNumber, now)
+      })
+    })
+
+    transaction()
+
+    return {
+      ...treatment,
+      id,
+      tooth_number: primaryToothNumber,
+      tooth_name: toothName,
+      tooth_numbers: toothNumbers,
+      tooth_count: toothNumbers.length,
+      tooth_numbers_display: toothNumbers.join(', '),
+      created_at: now,
+      updated_at: now
+    }
   }
 
   async updateToothTreatment(id, updates) {
@@ -4415,22 +4536,57 @@ class DatabaseService {
       'cost', 'priority', 'notes', 'appointment_id'
     ]
 
+    const shouldUpdateToothLinks = updates.tooth_numbers !== undefined || updates.selected_teeth !== undefined || updates.tooth_number !== undefined
     const updateColumns = Object.keys(updates).filter(key => allowedColumns.includes(key))
 
-    if (updateColumns.length === 0) {
+    if (updateColumns.length === 0 && !shouldUpdateToothLinks) {
       throw new Error('No valid columns to update')
     }
 
-    const setClause = updateColumns.map(col => `${col} = ?`).join(', ')
-    const values = updateColumns.map(col => updates[col])
+    const transaction = this.db.transaction(() => {
+      if (updateColumns.length > 0) {
+        const setClause = updateColumns.map(col => `${col} = ?`).join(', ')
+        const values = updateColumns.map(col => updates[col])
 
-    const stmt = this.db.prepare(`
-      UPDATE tooth_treatments
-      SET ${setClause}, updated_at = ?
-      WHERE id = ?
-    `)
+        const stmt = this.db.prepare(`
+          UPDATE tooth_treatments
+          SET ${setClause}, updated_at = ?
+          WHERE id = ?
+        `)
 
-    stmt.run(...values, now, id)
+        stmt.run(...values, now, id)
+      } else {
+        this.db.prepare(`
+          UPDATE tooth_treatments
+          SET updated_at = ?
+          WHERE id = ?
+        `).run(now, id)
+      }
+
+      if (shouldUpdateToothLinks) {
+        const currentTreatment = this.db.prepare('SELECT tooth_number FROM tooth_treatments WHERE id = ?').get(id)
+        const toothNumbers = this.getTreatmentToothNumbers({
+          tooth_number: updates.tooth_number ?? currentTreatment?.tooth_number,
+          tooth_numbers: updates.tooth_numbers ?? updates.selected_teeth
+        })
+
+        if (toothNumbers.length > 0) {
+          this.db.prepare('DELETE FROM tooth_treatment_teeth WHERE tooth_treatment_id = ?').run(id)
+
+          const linkStmt = this.db.prepare(`
+            INSERT OR IGNORE INTO tooth_treatment_teeth (
+              tooth_treatment_id, tooth_number, created_at
+            ) VALUES (?, ?, ?)
+          `)
+
+          toothNumbers.forEach((toothNumber) => {
+            linkStmt.run(id, toothNumber, now)
+          })
+        }
+      }
+    })
+
+    transaction()
   }
 
   async deleteToothTreatment(id) {
@@ -4439,6 +4595,10 @@ class DatabaseService {
 
     // Start a transaction to ensure data consistency
     const transaction = this.db.transaction(() => {
+      const deleteTreatmentTeethStmt = this.db.prepare('DELETE FROM tooth_treatment_teeth WHERE tooth_treatment_id = ?')
+      const treatmentTeethResult = deleteTreatmentTeethStmt.run(id)
+      console.log(`🗑️ Deleted ${treatmentTeethResult.changes} tooth links associated with treatment ${id}`)
+
       // First, delete associated payments
       const deletePaymentsStmt = this.db.prepare('DELETE FROM payments WHERE tooth_treatment_id = ?')
       const paymentsResult = deletePaymentsStmt.run(id)
@@ -4471,51 +4631,32 @@ class DatabaseService {
     const transaction = this.db.transaction(() => {
       const now = new Date().toISOString()
 
-      // Get current treatments to preserve other data
-      const getCurrentStmt = this.db.prepare(`
-        SELECT * FROM tooth_treatments
-        WHERE patient_id = ? AND tooth_number = ?
-        ORDER BY priority
+      const setTemporaryPriorityStmt = this.db.prepare(`
+        UPDATE tooth_treatments
+        SET priority = ?, updated_at = ?
+        WHERE id = ? AND patient_id = ?
       `)
-      const currentTreatments = getCurrentStmt.all(patientId, toothNumber)
+      treatmentIds.forEach((treatmentId, index) => {
+        setTemporaryPriorityStmt.run(-(index + 1), now, treatmentId, patientId)
+      })
 
-      // Delete all treatments for this tooth temporarily
-      const deleteStmt = this.db.prepare(`
-        DELETE FROM tooth_treatments
-        WHERE patient_id = ? AND tooth_number = ?
-      `)
-      deleteStmt.run(patientId, toothNumber)
-
-      // Re-insert treatments in the new order
-      const insertStmt = this.db.prepare(`
-        INSERT INTO tooth_treatments (
-          id, patient_id, tooth_number, tooth_name, treatment_type, treatment_category,
-          treatment_color, treatment_status, cost, start_date, completion_date,
-          notes, priority, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      const setPriorityStmt = this.db.prepare(`
+        UPDATE tooth_treatments
+        SET priority = ?, updated_at = ?
+        WHERE id = ? AND patient_id = ?
+          AND (
+            tooth_number = ?
+            OR EXISTS (
+              SELECT 1
+              FROM tooth_treatment_teeth ttt
+              WHERE ttt.tooth_treatment_id = tooth_treatments.id
+                AND ttt.tooth_number = ?
+            )
+          )
       `)
 
       treatmentIds.forEach((treatmentId, index) => {
-        const treatment = currentTreatments.find(t => t.id === treatmentId)
-        if (treatment) {
-          insertStmt.run(
-            treatment.id,
-            treatment.patient_id,
-            treatment.tooth_number,
-            treatment.tooth_name,
-            treatment.treatment_type,
-            treatment.treatment_category,
-            treatment.treatment_color,
-            treatment.treatment_status,
-            treatment.cost,
-            treatment.start_date,
-            treatment.completion_date,
-            treatment.notes,
-            index + 1, // New priority
-            treatment.created_at,
-            now // Updated timestamp
-          )
-        }
+        setPriorityStmt.run(index + 1, now, treatmentId, patientId, toothNumber, toothNumber)
       })
     })
 

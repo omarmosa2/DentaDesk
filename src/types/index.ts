@@ -305,6 +305,9 @@ export interface ToothTreatment {
   patient_id: string
   tooth_number: number
   tooth_name: string
+  tooth_numbers?: number[]
+  tooth_count?: number
+  tooth_numbers_display?: string
   treatment_type: string
   treatment_category: string
   treatment_status: 'planned' | 'in_progress' | 'completed' | 'cancelled'

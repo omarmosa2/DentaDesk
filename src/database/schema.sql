@@ -437,6 +437,28 @@ CREATE TABLE IF NOT EXISTS tooth_treatments (
     UNIQUE(patient_id, tooth_number, priority)
 );
 
+-- Teeth linked to a single treatment. This allows one bridge/crown/etc. to cover
+-- multiple teeth while keeping one treatment cost and one financial record.
+CREATE TABLE IF NOT EXISTS tooth_treatment_teeth (
+    tooth_treatment_id TEXT NOT NULL,
+    tooth_number INTEGER NOT NULL CHECK (
+        (tooth_number >= 11 AND tooth_number <= 18) OR
+        (tooth_number >= 21 AND tooth_number <= 28) OR
+        (tooth_number >= 31 AND tooth_number <= 38) OR
+        (tooth_number >= 41 AND tooth_number <= 48) OR
+        (tooth_number >= 51 AND tooth_number <= 55) OR
+        (tooth_number >= 61 AND tooth_number <= 65) OR
+        (tooth_number >= 71 AND tooth_number <= 75) OR
+        (tooth_number >= 81 AND tooth_number <= 85)
+    ),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (tooth_treatment_id, tooth_number),
+    FOREIGN KEY (tooth_treatment_id) REFERENCES tooth_treatments(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_tooth_treatment_teeth_tooth
+ON tooth_treatment_teeth(tooth_number);
+
 -- Legacy dental treatment images table (kept for backward compatibility)
 CREATE TABLE IF NOT EXISTS dental_treatment_images (
     id TEXT PRIMARY KEY,

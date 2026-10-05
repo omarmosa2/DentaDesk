@@ -98,8 +98,12 @@ export default function EnhancedToothDetailsDialog({
   const toothInfo = toothNumber ? getToothInfo(toothNumber, isPrimaryTeeth) : null
 
   // Filter treatments for this specific tooth
+  const treatmentAppliesToTooth = (treatment: ToothTreatment) => {
+    return treatment.tooth_number === toothNumber || treatment.tooth_numbers?.includes(toothNumber || 0)
+  }
+
   const currentToothTreatments = (toothTreatments || []).filter(
-    t => t.patient_id === patientId && t.tooth_number === toothNumber
+    t => t.patient_id === patientId && treatmentAppliesToTooth(t)
   )
 
   // Get the primary treatment color (highest priority active treatment)

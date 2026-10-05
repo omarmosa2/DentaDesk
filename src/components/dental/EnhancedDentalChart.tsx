@@ -127,8 +127,12 @@ export default function EnhancedDentalChart({
 
   // Get treatments for a specific tooth
   const getToothTreatments = (toothNumber: number): ToothTreatment[] => {
+    const appliesToTooth = (treatment: ToothTreatment) => {
+      return treatment.tooth_number === toothNumber || treatment.tooth_numbers?.includes(toothNumber)
+    }
+
     const treatments = toothTreatments.filter(
-      t => t.patient_id === patientId && t.tooth_number === toothNumber
+      t => t.patient_id === patientId && appliesToTooth(t)
     ).sort((a, b) => a.priority - b.priority)
 
     // تم إزالة console.log لتقليل الرسائل عند تمرير الماوس

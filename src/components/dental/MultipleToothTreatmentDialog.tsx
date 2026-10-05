@@ -112,12 +112,12 @@ export default function MultipleToothTreatmentDialog({
   }
 
   // دالة إنشاء دفعة آجلة للعلاج
-  const createPendingPaymentForTreatment = async (treatmentId: string, toothNumber: number) => {
+  const createPendingPaymentForTreatment = async (treatmentId: string, toothNumbers: number[]) => {
     console.log('💰 [DEBUG] createPendingPaymentForTreatment called:', {
       treatmentId,
       cost: treatmentData.cost,
       patientId,
-      toothNumber
+      toothNumbers
     })
 
     // التحقق من المتطلبات الأساسية
@@ -139,7 +139,10 @@ export default function MultipleToothTreatmentDialog({
       }
 
       const treatmentTypeInfo = getTreatmentByValue(treatmentData.treatment_type!)
-      const description = `${treatmentTypeInfo?.label || treatmentData.treatment_type} - السن ${toothNumber}`
+      const teethDescription = toothNumbers.length > 1
+        ? `الأسنان ${toothNumbers.join(', ')}`
+        : `السن ${toothNumbers[0]}`
+      const description = `${treatmentTypeInfo?.label || treatmentData.treatment_type} - ${teethDescription}`
 
       // بيانات الدفعة الآجلة
       const paymentData = {
@@ -150,7 +153,7 @@ export default function MultipleToothTreatmentDialog({
         payment_date: new Date().toISOString().split('T')[0],
         description: description, // وصف نظيف بدون معرف العلاج
         status: 'pending' as const,
-        notes: `دفعة آجلة للمريض: ${patient.full_name} - السن ${toothNumber} - العلاج: ${treatmentTypeInfo?.label || treatmentData.treatment_type}`,
+        notes: `دفعة آجلة للمريض: ${patient.full_name} - ${teethDescription} - العلاج: ${treatmentTypeInfo?.label || treatmentData.treatment_type}`,
         total_amount_due: treatmentData.cost,
         amount_paid: 0,
         remaining_balance: treatmentData.cost,
@@ -168,19 +171,19 @@ export default function MultipleToothTreatmentDialog({
     } catch (error) {
       console.error('❌ [DEBUG] Payment creation failed:', error)
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
-      notify.error(`فشل في إنشاء الدفعة الآجلة للسن ${toothNumber}: ${errorMessage}`)
+      notify.error(`فشل في إنشاء الدفعة الآجلة للأسنان المحددة: ${errorMessage}`)
       throw error
     }
   }
 
   // دالة إنشاء طلب مختبر للعلاج
-  const createLabOrderForTreatment = async (treatmentId: string, toothNumber: number) => {
+  const createLabOrderForTreatment = async (treatmentId: string, toothNumbers: number[]) => {
     console.log('🧪 [DEBUG] createLabOrderForTreatment called:', {
       treatmentId,
       labCost,
       selectedLab,
       patientId,
-      toothNumber
+      toothNumbers
     })
 
     try {
@@ -192,16 +195,20 @@ export default function MultipleToothTreatmentDialog({
         throw new Error('لم يتم العثور على بيانات المريض')
       }
 
+      const teethDescription = toothNumbers.length > 1
+        ? `الأسنان ${toothNumbers.join(', ')}`
+        : `السن ${toothNumbers[0]}`
+
       const labOrderData = {
         lab_id: selectedLab,
         patient_id: patientId,
         tooth_treatment_id: treatmentId,
-        tooth_number: toothNumber,
-        service_name: `${treatmentType?.label || 'علاج تعويضات'} - السن ${toothNumber}`,
+        tooth_number: toothNumbers[0],
+        service_name: `${treatmentType?.label || 'علاج تعويضات'} - ${teethDescription}`,
         cost: labCost,
         order_date: new Date().toISOString().split('T')[0],
         status: 'آجل' as const,
-        notes: `طلب مخبر للمريض: ${patient.full_name} - السن ${toothNumber} - العلاج: ${treatmentType?.label || treatmentData.treatment_type}`,
+        notes: `طلب مخبر للمريض: ${patient.full_name} - ${teethDescription} - العلاج: ${treatmentType?.label || treatmentData.treatment_type}`,
         paid_amount: 0,
         remaining_balance: labCost
       }
@@ -214,7 +221,7 @@ export default function MultipleToothTreatmentDialog({
     } catch (error) {
       console.error('❌ [DEBUG] Lab order creation failed:', error)
       const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف'
-      notify.error(`فشل في إنشاء طلب المختبر للسن ${toothNumber}: ${errorMessage}`)
+      notify.error(`فشل في إنشاء طلب المختبر للأسنان المحددة: ${errorMessage}`)
       throw error
     }
   }
@@ -234,99 +241,59 @@ export default function MultipleToothTreatmentDialog({
     setIsSubmitting(true)
 
     try {
-      let successCount = 0
-      let paymentSuccessCount = 0
-      let labOrderSuccessCount = 0
+      const sortedSelectedTeeth = [...selectedTeeth].sort((a, b) => a - b)
+      const teethDescription = sortedSelectedTeeth.length > 1
+        ? `الأسنان ${sortedSelectedTeeth.join(', ')}`
+        : `السن ${sortedSelectedTeeth[0]}`
 
-      // معالجة كل سن على حدة
-      for (const toothNumber of selectedTeeth) {
+      const treatmentToCreate: Omit<ToothTreatment, 'id' | 'created_at' | 'updated_at'> = {
+        ...treatmentData,
+        patient_id: patientId,
+        tooth_number: sortedSelectedTeeth[0],
+        tooth_numbers: sortedSelectedTeeth,
+        tooth_name: teethDescription,
+        treatment_type: treatmentData.treatment_type!,
+        treatment_category: treatmentData.treatment_category!,
+        treatment_color: treatmentData.treatment_color || '#22c55e',
+        treatment_status: treatmentData.treatment_status || 'planned',
+        cost: treatmentData.cost || 0,
+        start_date: treatmentData.start_date,
+        notes: treatmentData.notes,
+        priority: 1 // سيتم تعيينه تلقائياً في قاعدة البيانات
+      }
+
+      const createdTreatments = await onAddTreatments([treatmentToCreate])
+
+      if (!createdTreatments || createdTreatments.length === 0) {
+        throw new Error('فشل في إنشاء العلاج للأسنان المحددة')
+      }
+
+      const createdTreatment = createdTreatments[0]
+      let successMessage = `تم إضافة علاج واحد مشترك لـ ${sortedSelectedTeeth.length} سن`
+
+      if (treatmentData.cost && treatmentData.cost > 0) {
         try {
-          console.log(`🦷 [DEBUG] Processing tooth ${toothNumber}`)
-
-          // الخطوة 1: إنشاء العلاج
-          const treatmentToCreate: Omit<ToothTreatment, 'id' | 'created_at' | 'updated_at'> = {
-            ...treatmentData,
-            patient_id: patientId,
-            tooth_number: toothNumber,
-            tooth_name: `السن ${toothNumber}`,
-            treatment_type: treatmentData.treatment_type!,
-            treatment_category: treatmentData.treatment_category!,
-            treatment_color: treatmentData.treatment_color || '#22c55e',
-            treatment_status: treatmentData.treatment_status || 'planned',
-            cost: treatmentData.cost || 0,
-            start_date: treatmentData.start_date,
-            notes: treatmentData.notes,
-            priority: 1 // سيتم تعيينه تلقائياً في قاعدة البيانات
-          }
-
-          // إنشاء العلاج باستخدام الدالة الموجودة
-          const createdTreatments = await onAddTreatments([treatmentToCreate])
-
-          if (createdTreatments && createdTreatments.length > 0) {
-            const createdTreatment = createdTreatments[0]
-            const treatmentId = createdTreatment.id
-            successCount++
-
-            console.log(`✅ [DEBUG] Treatment created successfully for tooth ${toothNumber}:`, treatmentId)
-
-            // الخطوة 2: إنشاء دفعة آجلة إذا تم تعبئة التكلفة
-            if (treatmentData.cost && treatmentData.cost > 0) {
-              console.log(`💰 [DEBUG] Creating payment for tooth ${toothNumber}`)
-              try {
-                await createPendingPaymentForTreatment(treatmentId, toothNumber)
-                paymentSuccessCount++
-                console.log(`✅ [DEBUG] Payment created successfully for tooth ${toothNumber}`)
-              } catch (paymentError) {
-                console.error(`❌ [DEBUG] Payment creation failed for tooth ${toothNumber}:`, paymentError)
-                notify.warning(`تم إنشاء العلاج للسن ${toothNumber} ولكن فشل في إنشاء الدفعة`)
-              }
-            }
-
-            // الخطوة 3: إنشاء طلب مختبر للتعويضات
-            if (treatmentData.treatment_category === 'التعويضات' && selectedLab && labCost > 0) {
-              console.log(`🧪 [DEBUG] Creating lab order for tooth ${toothNumber}`)
-              try {
-                await createLabOrderForTreatment(treatmentId, toothNumber)
-                labOrderSuccessCount++
-                console.log(`✅ [DEBUG] Lab order created successfully for tooth ${toothNumber}`)
-              } catch (labError) {
-                console.error(`❌ [DEBUG] Lab order creation failed for tooth ${toothNumber}:`, labError)
-                notify.warning(`تم إنشاء العلاج والدفعة للسن ${toothNumber} ولكن فشل في إنشاء طلب المختبر`)
-              }
-            }
-
-          } else {
-            throw new Error(`فشل في إنشاء العلاج للسن ${toothNumber}`)
-          }
-
-        } catch (toothError) {
-          console.error(`❌ [DEBUG] Failed to process tooth ${toothNumber}:`, toothError)
-          notify.error(`فشل في معالجة السن ${toothNumber}`)
+          await createPendingPaymentForTreatment(createdTreatment.id, sortedSelectedTeeth)
+          successMessage += ' مع دفعة آجلة واحدة'
+        } catch (paymentError) {
+          console.error('❌ [DEBUG] Payment creation failed for multi-tooth treatment:', paymentError)
+          notify.warning('تم إنشاء العلاج المشترك ولكن فشل في إنشاء الدفعة')
         }
       }
 
-      // رسائل النجاح
-      if (successCount > 0) {
-        let successMessage = `تم إضافة العلاج بنجاح لـ ${successCount} سن`
-
-        if (paymentSuccessCount > 0) {
-          successMessage += ` مع ${paymentSuccessCount} دفعة آجلة`
+      if (treatmentData.treatment_category === 'التعويضات' && selectedLab && labCost > 0) {
+        try {
+          await createLabOrderForTreatment(createdTreatment.id, sortedSelectedTeeth)
+          successMessage += ' وطلب مختبر واحد'
+        } catch (labError) {
+          console.error('❌ [DEBUG] Lab order creation failed for multi-tooth treatment:', labError)
+          notify.warning('تم إنشاء العلاج والدفعة ولكن فشل في إنشاء طلب المختبر')
         }
-
-        if (labOrderSuccessCount > 0) {
-          successMessage += ` و ${labOrderSuccessCount} طلب مختبر`
-        }
-
-        notify.success(successMessage)
       }
 
-      if (successCount === selectedTeeth.length) {
-        // إعادة تعيين النموذج
-        resetForm()
-        onOpenChange(false)
-      } else {
-        notify.warning(`تم معالجة ${successCount} من أصل ${selectedTeeth.length} أسنان بنجاح`)
-      }
+      notify.success(successMessage)
+      resetForm()
+      onOpenChange(false)
 
     } catch (error) {
       console.error('Error adding multiple treatments:', error)
@@ -361,7 +328,7 @@ export default function MultipleToothTreatmentDialog({
             إضافة علاج للأسنان المحددة
           </DialogTitle>
           <DialogDescription>
-            إضافة نفس العلاج لجميع الأسنان المحددة ({selectedTeeth.length} سن)
+            إضافة علاج واحد مشترك للأسنان المحددة ({selectedTeeth.length} سن) بتكلفة واحدة
           </DialogDescription>
         </DialogHeader>
 
@@ -375,7 +342,7 @@ export default function MultipleToothTreatmentDialog({
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">
-                {selectedTeeth.sort((a, b) => a - b).map(toothNumber => (
+                {[...selectedTeeth].sort((a, b) => a - b).map(toothNumber => (
                   <Badge 
                     key={toothNumber}
                     variant="secondary"
@@ -554,7 +521,7 @@ export default function MultipleToothTreatmentDialog({
               disabled={isSubmitting || !treatmentData.treatment_type}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {isSubmitting ? 'جاري الإضافة...' : `إضافة العلاج لـ ${selectedTeeth.length} سن`}
+              {isSubmitting ? 'جاري الإضافة...' : `إضافة علاج واحد لـ ${selectedTeeth.length} سن`}
             </Button>
           </div>
         </div>
